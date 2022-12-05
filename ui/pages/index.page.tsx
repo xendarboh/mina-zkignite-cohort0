@@ -20,7 +20,7 @@ export default function Home() {
       // Update this to use the address (public key) for your zkApp account
       // To try it out, you can try this address for an example "Add" smart contract that we've deployed to 
       // Berkeley Testnet B62qisn669bZqsh8yMWkNyCA7RvjrL6gfdr3TQxymDHNhTc97xE5kNV
-      const zkAppAddress = '';
+      const zkAppAddress = 'B62qisn669bZqsh8yMWkNyCA7RvjrL6gfdr3TQxymDHNhTc97xE5kNV';
       // This should be removed once the zkAppAddress is updated.
       if (!zkAppAddress) {
         console.error(
