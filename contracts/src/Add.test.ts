@@ -9,6 +9,8 @@ import {
   AccountUpdate,
 } from 'snarkyjs';
 
+import { jest } from '@jest/globals';
+
 /*
  * This file specifies how to test the `Add` example smart contract. It is safe to delete this file and replace
  * with your own tests.
@@ -19,6 +21,8 @@ import {
 let proofsEnabled = false;
 
 describe('Add', () => {
+  jest.setTimeout(1000 * 100);
+
   let deployerAccount: PrivateKey,
     zkAppAddress: PublicKey,
     zkAppPrivateKey: PrivateKey,
