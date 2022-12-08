@@ -10,13 +10,16 @@ import {
   Signature,
   PrivateKey,
   Poseidon,
-  // UInt64,
-  // Circuit,
+  UInt64,
 } from 'snarkyjs';
 
 // The public key of our trusted data provider
 const ORACLE_PUBLIC_KEY =
   'B62qpxcmAq7DFDFk1wGrishcNTEVgwZaVbtsTFEc8CiARFt31oauHsu';
+
+// The amount of time (in milliseconds) that the timestamped oracle signature
+// is valid
+export const ORACLE_EXPIRATION_TIME = 1000 * 60 * 10; // 10 minutes
 
 export class BioAuthOracle extends SmartContract {
   // Define contract state
@@ -25,6 +28,7 @@ export class BioAuthOracle extends SmartContract {
   // Define contract events
   events = {
     verified: Field,
+    // TODO: verifiedAccount: PublicKey,
   };
 
   deploy(args: DeployArgs) {
@@ -70,13 +74,12 @@ export class BioAuthOracle extends SmartContract {
     bioAuthId.equals(Field(0)).not().assertTrue();
 
     // Check that the current time is not before the oracle's timestamp
-    // and that not more than 10 minutes have elapsed
-    // TODO: const then = UInt64.from(timestamp);
-    // TODO: this.network.timestamp.assertBetween(then, then.add(1000 * 60 * 10));
-
-    // X: const now = this.network.timestamp.get();
-    // X: Circuit.log('now', now);
-    // X: Circuit.log('then', then);
+    // and not after the expiration time
+    const then = UInt64.from(timestamp);
+    this.network.timestamp.assertBetween(
+      then,
+      then.add(ORACLE_EXPIRATION_TIME)
+    );
 
     // Emit an event containing the verified payload
     this.emitEvent('verified', payload);
