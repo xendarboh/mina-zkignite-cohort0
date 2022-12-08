@@ -132,8 +132,14 @@ describe('BioAuthOracle', () => {
       await txn.send();
 
       const events = await zkAppInstance.fetchEvents();
-      const verifiedEventValue = events[0].event.toFields(null)[0];
-      expect(verifiedEventValue).toEqual(payload);
+
+      expect('bioauthorizedAccount').toEqual(events[0].type);
+      const eventValue0 = events[0].event;
+      expect(eventValue0).toEqual(userPublicKey);
+
+      expect('bioauthorizedPayload').toEqual(events[1].type);
+      const eventValue1 = events[1].event.toFields(null)[0];
+      expect(eventValue1).toEqual(payload);
     });
 
     it('throws an error if the timestamp on the oracle response has expired even if the signatures are valid', async () => {
@@ -223,8 +229,14 @@ describe('BioAuthOracle', () => {
       await txn.send();
 
       const events = await zkAppInstance.fetchEvents();
-      const verifiedEventValue = events[0].event.toFields(null)[0];
-      expect(verifiedEventValue).toEqual(payload);
+
+      expect('bioauthorizedAccount').toEqual(events[0].type);
+      const eventValue0 = events[0].event;
+      expect(eventValue0).toEqual(userPublicKey);
+
+      expect('bioauthorizedPayload').toEqual(events[1].type);
+      const eventValue1 = events[1].event.toFields(null)[0];
+      expect(eventValue1).toEqual(payload);
     });
 
     it('throws an error if the timestamp on the oracle response has expired', async () => {

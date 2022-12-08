@@ -27,8 +27,8 @@ export class BioAuthOracle extends SmartContract {
 
   // Define contract events
   events = {
-    verified: Field,
-    // TODO: verifiedAccount: PublicKey,
+    bioauthorizedPayload: Field,
+    bioauthorizedAccount: PublicKey,
   };
 
   deploy(args: DeployArgs) {
@@ -82,7 +82,7 @@ export class BioAuthOracle extends SmartContract {
     );
 
     // Emit an event containing the verified payload
-    this.emitEvent('verified', payload);
+    this.emitEvent('bioauthorizedPayload', payload);
   }
 
   // Verify an oracle response where payload is a hashed signature from a given
@@ -106,6 +106,6 @@ export class BioAuthOracle extends SmartContract {
     this.verify(payload, timestamp, bioAuthId, signature);
 
     // Emit an event containing the verified account
-    // TODO: this.emitEvent('verifiedAccount', userKey);
+    this.emitEvent('bioauthorizedAccount', userKey);
   }
 }
