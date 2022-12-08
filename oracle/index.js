@@ -1,13 +1,39 @@
 const Koa = require("koa");
 const Router = require("@koa/router");
-const { isReady, PrivateKey, Field, Signature } = require("snarkyjs");
+const {
+  Encoding,
+  Field,
+  Poseidon,
+  PrivateKey,
+  Signature,
+  isReady,
+} = require("snarkyjs");
 
 const PORT = process.env.PORT || 3000;
 
 const app = new Koa();
 const router = new Router();
 
-async function getSignedCreditScore(userId) {
+// simulate authenticated biometric identifiers
+const bioAuthIds = [
+  "bF1Hk36PrzBIY2AxSQT0",
+  "5F1jP3ASmlBpX2Sf3Qy0",
+  "HF1Fy3sz51BY62rlXQ50",
+  "3F1KA3AphJBuJ2o3fQJ0",
+  "pF14A3T7TRBDq2wkGQG0",
+  "KF1wl35NGyBAY2U0jQd0",
+  "8F1p13m01ABpr2ZAAQs0",
+  "3F1p73MkvoB2v2QNKQP0",
+  "cF1NQ33gMZBZ22TrrQS0",
+  "iF1yT3hooSB5e2dRFQU0",
+  "JF1DF3h1EmBpz2jtuQ40",
+  "XF1yG3e7PZBD52dsqQS0",
+  "SF1sb3dpv0BDl2j89QY0",
+  "WF1a1362WBBbT2FHsQ90",
+];
+const getBioAuthId = (x) => bioAuthIds[x % bioAuthIds.length];
+
+async function getSignedBioAuthId(_payload) {
   // We need to wait for SnarkyJS to finish loading before we can do anything
   await isReady;
 
@@ -16,35 +42,40 @@ async function getSignedCreditScore(userId) {
   // variable.
   const privateKey = PrivateKey.fromBase58(
     process.env.PRIVATE_KEY ??
-      "EKF65JKw9Q1XWLDZyZNGysBbYG21QbJf3a4xnEoZPZ28LKYGMw53"
+      "EKFALuhuMgHMoxVb3mwKS3Zx5yL9kg5TawbBoQaDq6bWqNE2GGBP"
   );
 
-  // We get the users credit score. In this case it's 787 for user 1, and 536
-  // for anybody else :)
-  const knownCreditScore = (userId) => (userId === "1" ? 787 : 536);
-
-  // We compute the public key associated with our private key
+  // Compute the public key associated with our private key
   const publicKey = privateKey.toPublicKey();
 
-  // Define a Field with the value of the users id
-  const id = Field(userId);
+  // Define a Field with the value of the payload
+  const payload = Field(_payload);
 
-  // Define a Field with the users credit score
-  const creditScore = Field(knownCreditScore(userId));
+  // Define a Field with the current timestamp
+  const timestamp = Field(Date.now());
 
-  // Use our private key to sign an array of Fields containing the users id and
-  // credit score
-  const signature = Signature.create(privateKey, [id, creditScore]);
+  // Define a Field with the users bioAuthId
+  const bioAuthId = Poseidon.hash(
+    Encoding.stringToFields(getBioAuthId(_payload))
+  );
+
+  // Use our private key to sign an array of Fields containing the data
+  const signature = Signature.create(privateKey, [
+    payload,
+    timestamp,
+    bioAuthId,
+  ]);
 
   return {
-    data: { id: id, creditScore: creditScore },
-    signature: signature,
-    publicKey: publicKey,
+    data: { payload, timestamp, bioAuthId },
+    signature,
+    publicKey,
   };
 }
 
-router.get("/user/:id", async (ctx) => {
-  ctx.body = await getSignedCreditScore(ctx.params.id);
+router.get("/:id", async (ctx) => {
+  ctx.body = await getSignedBioAuthId(ctx.params.id);
+  console.log(`/${ctx.params.id} --> ${ctx.body.data.bioAuthId}`);
 });
 
 app.use(router.routes()).use(router.allowedMethods());
