@@ -36,7 +36,7 @@ export default function App() {
         const mina = (window as any).mina;
 
         if (mina == null) {
-          setState({ ...state, hasWallet: false });
+          setState((s) => ({ ...s, hasWallet: false }));
           return;
         }
 
@@ -68,8 +68,8 @@ export default function App() {
         const currentNum = await zkappWorkerClient.getNum();
         console.log("current state:", currentNum.toString());
 
-        setState({
-          ...state,
+        setState((s) => ({
+          ...s,
           zkappWorkerClient,
           hasWallet: true,
           hasBeenSetup: true,
@@ -77,10 +77,10 @@ export default function App() {
           zkappPublicKey,
           accountExists,
           currentNum,
-        });
+        }));
       }
     })();
-  }, []);
+  }, [state.hasBeenSetup]);
 
   // -------------------------------------------------------
   // Wait for account to exist, if it didn't
@@ -99,10 +99,15 @@ export default function App() {
           }
           await new Promise((resolve) => setTimeout(resolve, 5000));
         }
-        setState({ ...state, accountExists: true });
+        setState((s) => ({ ...s, accountExists: true }));
       }
     })();
-  }, [state.hasBeenSetup]);
+  }, [
+    state.accountExists,
+    state.hasBeenSetup,
+    state.publicKey,
+    state.zkappWorkerClient,
+  ]);
 
   // -------------------------------------------------------
   // Send a transaction
