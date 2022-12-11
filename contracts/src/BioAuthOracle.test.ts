@@ -1,4 +1,4 @@
-import { BioAuthOracle, ORACLE_EXPIRATION_TIME } from './BioAuthOracle';
+import { BioAuthOracle, BIOAUTH_TTL } from './BioAuthOracle';
 
 import {
   isReady,
@@ -98,7 +98,7 @@ describe('BioAuthOracle', () => {
   });
 
   describe('actual API requests', () => {
-    it('emits an `verified` event containing the payload if the bioauth, timestamp, and signature are valid', async () => {
+    it('emits an event if the account bioauthorization is valid', async () => {
       const zkAppInstance = new BioAuthOracle(zkAppAddress);
       await localDeploy(zkAppInstance, zkAppPrivateKey, deployerAccount);
 
@@ -133,11 +133,11 @@ describe('BioAuthOracle', () => {
 
       const events = await zkAppInstance.fetchEvents();
 
-      expect('bioauthorizedAccount').toEqual(events[0].type);
+      expect('bioAuthorizedAccount').toEqual(events[0].type);
       const eventValue0 = events[0].event;
       expect(eventValue0).toEqual(userPublicKey);
 
-      expect('bioauthorizedPayload').toEqual(events[1].type);
+      expect('bioAuthorizedMessage').toEqual(events[1].type);
       const eventValue1 = events[1].event.toFields(null)[0];
       expect(eventValue1).toEqual(payload);
     });
@@ -160,9 +160,7 @@ describe('BioAuthOracle', () => {
       const signature = Signature.fromJSON(data.signature);
 
       // !! set the local blockchain time to be into the future
-      Local.setTimestamp(
-        UInt64.from(Date.now() + ORACLE_EXPIRATION_TIME + 1000)
-      );
+      Local.setTimestamp(UInt64.from(Date.now() + BIOAUTH_TTL + 1000));
 
       expect(async () => {
         await Mina.transaction(deployerAccount, () => {
@@ -200,7 +198,7 @@ describe('BioAuthOracle', () => {
       s: '18597266674018403770243070821948188759787123939357049409611567205466187887166',
     };
 
-    it('emits an `verified` event containing the payload if the bioauth, timestamp, and signature are valid', async () => {
+    it('emits an event if the account bioauthorization is valid', async () => {
       const zkAppInstance = new BioAuthOracle(zkAppAddress);
       await localDeploy(zkAppInstance, zkAppPrivateKey, deployerAccount);
 
@@ -230,11 +228,11 @@ describe('BioAuthOracle', () => {
 
       const events = await zkAppInstance.fetchEvents();
 
-      expect('bioauthorizedAccount').toEqual(events[0].type);
+      expect('bioAuthorizedAccount').toEqual(events[0].type);
       const eventValue0 = events[0].event;
       expect(eventValue0).toEqual(userPublicKey);
 
-      expect('bioauthorizedPayload').toEqual(events[1].type);
+      expect('bioAuthorizedMessage').toEqual(events[1].type);
       const eventValue1 = events[1].event.toFields(null)[0];
       expect(eventValue1).toEqual(payload);
     });
@@ -249,13 +247,11 @@ describe('BioAuthOracle', () => {
       const signature = Signature.fromJSON(data.signature);
 
       // !! set the local blockchain time to be in the future
-      Local.setTimestamp(
-        UInt64.from(Date.now() + ORACLE_EXPIRATION_TIME + 1000)
-      );
+      Local.setTimestamp(UInt64.from(Date.now() + BIOAUTH_TTL + 1000));
 
       expect(async () => {
         await Mina.transaction(deployerAccount, () => {
-          zkAppInstance.verify(
+          zkAppInstance.verifyMessage(
             payload,
             timestamp,
             bioAuthId,
@@ -290,7 +286,7 @@ describe('BioAuthOracle', () => {
 
       expect(async () => {
         await Mina.transaction(deployerAccount, () => {
-          zkAppInstance.verify(
+          zkAppInstance.verifyMessage(
             payload,
             timestamp,
             bioAuthId,
