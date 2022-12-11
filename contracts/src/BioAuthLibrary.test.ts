@@ -11,7 +11,7 @@ import {
 } from 'snarkyjs';
 import { jest } from '@jest/globals';
 
-import { BioAuthLib, BIOAUTH_TTL } from './BioAuthLib';
+import { BioAuthLib, BIOAUTH_TTL } from './BioAuthLibrary';
 import { BioAuthorizedMessage } from '../lib';
 
 // The public key of our trusted data provider
