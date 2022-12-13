@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { PublicKey, Field } from "snarkyjs";
+import { PublicKey, Field, Poseidon } from "snarkyjs";
 
 import "../styles/globals.css";
 import "./reactCOIServiceWorker";
 import ZkappWorkerClient from "./zkappWorkerClient";
 
 const transactionFee = 0.1;
+
+const BIOAUTH_ORACLE_URL = "http://localhost:3000";
 
 export default function App() {
   let [state, setState] = useState({
@@ -14,6 +16,8 @@ export default function App() {
     hasBeenSetup: false,
     accountExists: false,
     currentNum: null as null | Field,
+    currentNumBioAuthed: null as null | Field,
+    errorMsg: null as null | string,
     publicKey: null as null | PublicKey,
     zkappPublicKey: null as null | PublicKey,
     creatingTransaction: false,
@@ -58,7 +62,7 @@ export default function App() {
         console.log("zkApp compiled");
 
         const zkappPublicKey = PublicKey.fromBase58(
-          "B62qky5W3ML9k6aJWWuwMuBC7sMmKF5LhS9kcmsCPLMGQ73fYY37Grq"
+          "B62qoc3ADEaKWKoHxpzzREiiadqZCf5XG3H9fi3r2SibJFSTb1tmu21"
         );
 
         await zkappWorkerClient.initZkappInstance(zkappPublicKey);
@@ -66,7 +70,11 @@ export default function App() {
         console.log("getting zkApp state...");
         await zkappWorkerClient.fetchAccount({ publicKey: zkappPublicKey });
         const currentNum = await zkappWorkerClient.getNum();
-        console.log("current state:", currentNum.toString());
+        const currentNumBioAuthed = await zkappWorkerClient.getNumBioAuthed();
+        console.log(
+          "current state:",
+          JSON.stringify({ currentNum, currentNumBioAuthed })
+        );
 
         setState((s) => ({
           ...s,
@@ -77,6 +85,8 @@ export default function App() {
           zkappPublicKey,
           accountExists,
           currentNum,
+          currentNumBioAuthed,
+          errorMsg: null,
         }));
       }
     })();
@@ -144,18 +154,75 @@ export default function App() {
     setState({ ...state, creatingTransaction: false });
   };
 
+  const onSendTransactionBioAuthed = async () => {
+    setState({ ...state, creatingTransaction: true, errorMsg: null });
+    console.log("sending a transaction...");
+
+    await state.zkappWorkerClient!.fetchAccount({
+      publicKey: state.publicKey!,
+    });
+
+    // use the curent number as the payload to bioauthenticate
+    const currentNumBioAuthed =
+      await state.zkappWorkerClient!.getNumBioAuthed();
+    const payload = Poseidon.hash(currentNumBioAuthed.toFields());
+
+    // retrieve data from bioauth oracle
+    // if payload has been authed by user, returns the signed data
+    // if payload has not yet been authed, returns msg indicating TODO
+    const response = await fetch(`${BIOAUTH_ORACLE_URL}/${payload}`);
+    const data = await response.json();
+    console.log("!! bioauth oracle response", JSON.stringify(data));
+
+    const errorMsg =
+      await state.zkappWorkerClient!.createUpdateBioAuthedTransaction(
+        JSON.stringify(data)
+      );
+    if (errorMsg) {
+      setState({ ...state, errorMsg });
+      return;
+    }
+
+    console.log("creating proof...");
+    await state.zkappWorkerClient!.proveUpdateTransaction();
+
+    console.log("getting Transaction JSON...");
+    const transactionJSON = await state.zkappWorkerClient!.getTransactionJSON();
+
+    console.log("requesting send transaction...");
+    const { hash } = await (window as any).mina.sendTransaction({
+      transaction: transactionJSON,
+      feePayer: {
+        fee: transactionFee,
+        memo: "",
+      },
+    });
+
+    console.log(
+      "See transaction at https://berkeley.minaexplorer.com/transaction/" + hash
+    );
+
+    setState({ ...state, creatingTransaction: false });
+  };
+
   // -------------------------------------------------------
   // Refresh the current state
 
-  const onRefreshCurrentNum = async () => {
+  const onRefreshCurrentState = async () => {
     console.log("getting zkApp state...");
     await state.zkappWorkerClient!.fetchAccount({
       publicKey: state.zkappPublicKey!,
     });
     const currentNum = await state.zkappWorkerClient!.getNum();
-    console.log("current state:", currentNum.toString());
+    const currentNumBioAuthed =
+      await state.zkappWorkerClient!.getNumBioAuthed();
 
-    setState({ ...state, currentNum });
+    console.log(
+      "current state:",
+      JSON.stringify({ currentNum, currentNumBioAuthed })
+    );
+
+    setState({ ...state, currentNum, currentNumBioAuthed });
   };
 
   // -------------------------------------------------------
@@ -211,11 +278,21 @@ export default function App() {
           onClick={onSendTransaction}
           disabled={state.creatingTransaction}
         >
-          {" "}
-          Send Transaction{" "}
+          Send Transaction
         </button>
         <div> Current Number in zkApp: {state.currentNum!.toString()} </div>
-        <button onClick={onRefreshCurrentNum}> Get Latest State </button>
+        <hr />
+        <button
+          onClick={onSendTransactionBioAuthed}
+          disabled={state.creatingTransaction}
+        >
+          Send Transaction BioAuthed
+        </button>
+        <div>
+          Current Bio-Authed Number in zkApp:{" "}
+          {state.currentNumBioAuthed?.toString()}
+        </div>
+        <button onClick={onRefreshCurrentState}> Get Latest State </button>
       </div>
     );
   }
@@ -225,6 +302,12 @@ export default function App() {
       {setup}
       {accountDoesNotExist}
       {mainContent}
+      {state.errorMsg && (
+        <div>
+          <hr />
+          {state.errorMsg}
+        </div>
+      )}
     </div>
   );
 }

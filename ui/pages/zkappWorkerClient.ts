@@ -47,8 +47,20 @@ export default class ZkappWorkerClient {
     return Field.fromJSON(JSON.parse(result as string));
   }
 
+  async getNumBioAuthed(): Promise<Field> {
+    const result = await this._call("getNumBioAuthed", {});
+    return Field.fromJSON(JSON.parse(result as string));
+  }
+
   createUpdateTransaction() {
     return this._call("createUpdateTransaction", {});
+  }
+
+  async createUpdateBioAuthedTransaction(data: string): Promise<null | string> {
+    const result = await this._call("createUpdateBioAuthedTransaction", {
+      data,
+    });
+    return result ? (result as string) : null;
   }
 
   proveUpdateTransaction() {

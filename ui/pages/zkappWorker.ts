@@ -1,5 +1,7 @@
 import { Mina, isReady, PublicKey, fetchAccount } from "snarkyjs";
 
+import { BioAuthorizedMessage } from "../../contracts/build/lib";
+
 type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
 // ---------------------------------------------------------------------------------------
@@ -43,11 +45,30 @@ const functions = {
     const currentNum = await state.zkapp!.num.get();
     return JSON.stringify(currentNum.toJSON());
   },
+  getNumBioAuthed: async (args: {}) => {
+    const currentNumBioAuthed = await state.zkapp!.numBioAuthed.get();
+    return JSON.stringify(currentNumBioAuthed.toJSON());
+  },
   createUpdateTransaction: async (args: {}) => {
     const transaction = await Mina.transaction(() => {
       state.zkapp!.update();
     });
     state.transaction = transaction;
+  },
+  createUpdateBioAuthedTransaction: async (args: { data: string }) => {
+    const data = JSON.parse(args.data);
+    const oracleMsg = BioAuthorizedMessage.fromJSON(data);
+
+    try {
+      const transaction = await Mina.transaction(() => {
+        state.zkapp!.updateBioAuthed(oracleMsg);
+      });
+      state.transaction = transaction;
+    } catch (e) {
+      console.log("Error", e);
+      return e instanceof Error ? e.message : String(e);
+    }
+    return null;
   },
   proveUpdateTransaction: async (args: {}) => {
     await state.transaction!.prove();
