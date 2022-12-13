@@ -7,13 +7,15 @@ import ZkappWorkerClient from "./zkappWorkerClient";
 
 const transactionFee = 0.1;
 
-const BIOAUTH_ORACLE_URL = "http://localhost:3000";
+const BIOAUTH_ORACLE_URL = "http://localhost:3000/mina";
 
 export default function App() {
   let [state, setState] = useState({
     zkappWorkerClient: null as null | ZkappWorkerClient,
     hasWallet: null as null | boolean,
     hasBeenSetup: false,
+    hasBioAuth: false,
+    bioAuthPayload: null as null | string,
     accountExists: false,
     currentNum: null as null | Field,
     currentNumBioAuthed: null as null | Field,
@@ -81,6 +83,8 @@ export default function App() {
           zkappWorkerClient,
           hasWallet: true,
           hasBeenSetup: true,
+          hasBioAuth: false,
+          bioAuthPayload: null,
           publicKey,
           zkappPublicKey,
           accountExists,
@@ -168,11 +172,23 @@ export default function App() {
     const payload = Poseidon.hash(currentNumBioAuthed.toFields());
 
     // retrieve data from bioauth oracle
-    // if payload has been authed by user, returns the signed data
-    // if payload has not yet been authed, returns msg indicating TODO
-    const response = await fetch(`${BIOAUTH_ORACLE_URL}/${payload}`);
+    const response = await fetch(`${BIOAUTH_ORACLE_URL}/${payload.toString()}`);
+
+    // if the payload has not been bioauthorized,
+    // abort sending txn and request bioauth from the user
+    if (response.status == 404) {
+      console.log("bioauth needed...");
+      setState({
+        ...state,
+        hasBioAuth: false,
+        bioAuthPayload: payload.toString(),
+        creatingTransaction: false,
+      });
+      return;
+    }
+
     const data = await response.json();
-    console.log("!! bioauth oracle response", JSON.stringify(data));
+    console.log("bioauth oracle response", JSON.stringify(data));
 
     const errorMsg =
       await state.zkappWorkerClient!.createUpdateBioAuthedTransaction(
@@ -270,6 +286,20 @@ export default function App() {
     );
   }
 
+  let txnNeedsBioAuth;
+  if (state.hasBeenSetup && !state.hasBioAuth && state.bioAuthPayload) {
+    const bioAuthLink = `${BIOAUTH_ORACLE_URL}/auth/${state.bioAuthPayload}`;
+    txnNeedsBioAuth = (
+      <div>
+        The transaction needs authorization. Please visit the bio-authorizor to
+        approve this transaction then re-send.{" "}
+        <a href={bioAuthLink} target="_blank" rel="noreferrer">
+          [BioAuth]
+        </a>
+      </div>
+    );
+  }
+
   let mainContent;
   if (state.hasBeenSetup && state.accountExists) {
     mainContent = (
@@ -301,6 +331,7 @@ export default function App() {
     <div>
       {setup}
       {accountDoesNotExist}
+      {txnNeedsBioAuth}
       {mainContent}
       {state.errorMsg && (
         <div>
