@@ -15,6 +15,19 @@ const PORT = process.env.PORT || 3000;
 const app = new Koa();
 const router = new Router();
 
+// catch errors for more tidy console output
+// https://github.com/koajs/koa/wiki/Error-Handling#catching-downstream-errors
+app.use(async (ctx, next) => {
+  try {
+    await next();
+  } catch (err) {
+    ctx.status = err.status || 500;
+    ctx.body = err.message;
+    // ctx.app.emit("error", err, ctx);
+    console.log(`[${ctx.status}] ${ctx.path}`);
+  }
+});
+
 app.use(cors());
 
 // simulate authenticated biometric identifiers
@@ -76,9 +89,37 @@ async function getSignedBioAuthId(_payload) {
   };
 }
 
+// for non-interactive tests
 router.get("/:id", async (ctx) => {
   ctx.body = await getSignedBioAuthId(ctx.params.id);
   console.log(`/${ctx.params.id} --> ${ctx.body.data.bioAuthId}`);
+});
+
+// an in-memory store of bioauthenticated payloads
+const signedBioAuths = {};
+
+// for simulating interactive requests
+// more closely resembles deployed non-test oracle
+router.get("/mina/:id", async (ctx) => {
+  const id = ctx.params.id;
+  if (signedBioAuths[id]) {
+    ctx.body = signedBioAuths[id];
+    console.log(`[200] /mina/${ctx.params.id} --> ${ctx.body.data.bioAuthId}`);
+  } else {
+    ctx.status = 404;
+    ctx.body = { error: "404" };
+    console.log(`[404] /mina/${ctx.params.id}`);
+  }
+});
+
+router.get("/mina/auth/:id", async (ctx) => {
+  const id = ctx.params.id;
+  const signed = await getSignedBioAuthId(id);
+  signedBioAuths[id] = signed;
+  ctx.body = signedBioAuths[id];
+  console.log(
+    `[200] /mina/auth/${ctx.params.id} --> ${ctx.body.data.bioAuthId}`
+  );
 });
 
 app.use(router.routes()).use(router.allowedMethods());
