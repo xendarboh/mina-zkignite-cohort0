@@ -48,15 +48,11 @@ class ProvableBioAuth {
    *
    * @param {PublicKey} oraclePublicKey
    * @param {BioAuthorizedMessage} oracleMsg
-   * @param {UInt64} currentTime
-   * @param {UInt64} expireTime
    * @return {*}  {Bool}
    */
   static checkMessage(
     oraclePublicKey: PublicKey,
-    oracleMsg: BioAuthorizedMessage,
-    currentTime: UInt64,
-    expireTime: UInt64
+    oracleMsg: BioAuthorizedMessage
   ): Bool {
     // Check whether the signature is valid for the provided data
     const validSignature = oracleMsg.signature.verify(oraclePublicKey, [
@@ -68,16 +64,7 @@ class ProvableBioAuth {
     // Check that the bioAuthId is not 0
     const validBioAuthId = oracleMsg.bioAuthId.equals(Field(0)).not();
 
-    // Check that the current time is not before the oracle's timestamp
-    // and not after the expiration time
-    const then = UInt64.from(oracleMsg.timestamp);
-    const validTimeLower = currentTime.gte(then);
-    const validTimeUpper = currentTime.lte(expireTime);
-
-    return validSignature
-      .and(validBioAuthId)
-      .and(validTimeLower)
-      .and(validTimeUpper);
+    return validSignature.and(validBioAuthId);
   }
 
   /**
@@ -85,8 +72,6 @@ class ProvableBioAuth {
    *
    * @param {PublicKey} oraclePublicKey
    * @param {BioAuthorizedMessage} oracleMsg
-   * @param {UInt64} currentTime
-   * @param {UInt64} expireTime
    * @param {PublicKey} userKey
    * @param {Signature} userSig
    * @return {*}  {Bool}
@@ -94,17 +79,10 @@ class ProvableBioAuth {
   static checkAccount(
     oraclePublicKey: PublicKey,
     oracleMsg: BioAuthorizedMessage,
-    currentTime: UInt64,
-    expireTime: UInt64,
     userKey: PublicKey,
     userSig: Signature
   ): Bool {
-    const validMessage = this.checkMessage(
-      oraclePublicKey,
-      oracleMsg,
-      currentTime,
-      expireTime
-    );
+    const validMessage = this.checkMessage(oraclePublicKey, oracleMsg);
 
     // Check that the user owns the user key
     const validSigUser = userSig.verify(userKey, userKey.toFields());
@@ -115,5 +93,29 @@ class ProvableBioAuth {
     );
 
     return validMessage.and(validSigUser).and(validSigHash);
+  }
+
+  /**
+   * Verify the TTL of the bio-authorized payload.
+   *
+   * NOTE: 2022-12-12 timestamp operations appear problematic
+   *
+   * @param {BioAuthorizedMessage} oracleMsg
+   * @param {UInt64} currentTime
+   * @param {UInt64} expireTime
+   * @return {*}  {Bool}
+   */
+  static checkTTL(
+    oracleMsg: BioAuthorizedMessage,
+    currentTime: UInt64,
+    expireTime: UInt64
+  ): Bool {
+    // Check that the current time is not before the oracle's timestamp
+    // and not after the expiration time
+    const then = UInt64.from(oracleMsg.timestamp);
+    const validTimeLower = currentTime.gte(then);
+    const validTimeUpper = currentTime.lte(expireTime);
+
+    return validTimeLower.and(validTimeUpper);
   }
 }

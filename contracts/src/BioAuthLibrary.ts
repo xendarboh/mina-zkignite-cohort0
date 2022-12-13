@@ -22,7 +22,7 @@ const ORACLE_PUBLIC_KEY =
 // bio-authorization is valid
 export const BIOAUTH_TTL = 1000 * 60 * 10; // 10 minutes
 
-export class BioAuthLib extends SmartContract {
+export class BioAuthLibrary extends SmartContract {
   // Define contract state
   @state(PublicKey) oraclePublicKey = State<PublicKey>();
   @state(UInt64) bioAuthTTL = State<UInt64>();
@@ -58,21 +58,20 @@ export class BioAuthLib extends SmartContract {
     const oraclePublicKey = this.oraclePublicKey.get();
     this.oraclePublicKey.assertEquals(oraclePublicKey);
 
-    // get the bioauth time-to-live from the contract state
-    const bioAuthTTL = this.bioAuthTTL.get();
-    this.bioAuthTTL.assertEquals(bioAuthTTL);
+    ProvableBioAuth.checkMessage(oraclePublicKey, oracleMsg).assertTrue();
 
-    const currentTime = this.network.timestamp.get();
-    this.network.timestamp.assertEquals(currentTime);
+    {
+      // get the bioauth time-to-live from the contract state
+      const bioAuthTTL = this.bioAuthTTL.get();
+      this.bioAuthTTL.assertEquals(bioAuthTTL);
 
-    const expireTime = UInt64.from(oracleMsg.timestamp).add(bioAuthTTL);
+      const currentTime = this.network.timestamp.get();
+      this.network.timestamp.assertEquals(currentTime);
 
-    ProvableBioAuth.checkMessage(
-      oraclePublicKey,
-      oracleMsg,
-      currentTime,
-      expireTime
-    );
+      const expireTime = UInt64.from(oracleMsg.timestamp).add(bioAuthTTL);
+
+      ProvableBioAuth.checkTTL(oracleMsg, currentTime, expireTime).assertTrue();
+    }
 
     // Emit an event containing the verified payload
     this.emitEvent('bioAuthorizedMessage', oracleMsg.payload);
@@ -90,22 +89,24 @@ export class BioAuthLib extends SmartContract {
     const oraclePublicKey = this.oraclePublicKey.get();
     this.oraclePublicKey.assertEquals(oraclePublicKey);
 
-    const bioAuthTTL = this.bioAuthTTL.get();
-    this.bioAuthTTL.assertEquals(bioAuthTTL);
-
-    const currentTime = this.network.timestamp.get();
-    this.network.timestamp.assertEquals(currentTime);
-
-    const expireTime = UInt64.from(oracleMsg.timestamp).add(bioAuthTTL);
-
     ProvableBioAuth.checkAccount(
       oraclePublicKey,
       oracleMsg,
-      currentTime,
-      expireTime,
       userKey,
       userSig
     ).assertTrue();
+
+    {
+      const bioAuthTTL = this.bioAuthTTL.get();
+      this.bioAuthTTL.assertEquals(bioAuthTTL);
+
+      const currentTime = this.network.timestamp.get();
+      this.network.timestamp.assertEquals(currentTime);
+
+      const expireTime = UInt64.from(oracleMsg.timestamp).add(bioAuthTTL);
+
+      ProvableBioAuth.checkTTL(oracleMsg, currentTime, expireTime).assertTrue();
+    }
 
     // Emit an event containing the verified account
     this.emitEvent('bioAuthorizedAccount', userKey);

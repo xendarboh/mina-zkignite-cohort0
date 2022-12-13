@@ -11,7 +11,7 @@ import {
 } from 'snarkyjs';
 import { jest } from '@jest/globals';
 
-import { BioAuthLib, BIOAUTH_TTL } from './BioAuthLibrary';
+import { BioAuthLibrary, BIOAUTH_TTL } from './BioAuthLibrary';
 import { BioAuthorizedMessage } from '../lib';
 
 // The public key of our trusted data provider
@@ -23,7 +23,7 @@ const ORACLE_URL = 'http://localhost:3000';
 const proofsEnabled = false;
 
 async function localDeploy(
-  zkAppInstance: BioAuthLib,
+  zkAppInstance: BioAuthLibrary,
   zkAppPrivatekey: PrivateKey,
   deployerAccount: PrivateKey
 ) {
@@ -37,7 +37,7 @@ async function localDeploy(
   await txn.send();
 }
 
-describe('BioAuthLib', () => {
+describe('BioAuthLibrary', () => {
   jest.setTimeout(1000 * 100);
 
   let deployerAccount: PrivateKey,
@@ -49,7 +49,7 @@ describe('BioAuthLib', () => {
 
   beforeAll(async () => {
     await isReady;
-    if (proofsEnabled) BioAuthLib.compile();
+    if (proofsEnabled) BioAuthLibrary.compile();
   });
 
   beforeEach(async () => {
@@ -77,8 +77,8 @@ describe('BioAuthLib', () => {
     setTimeout(shutdown, 0);
   });
 
-  it('generates and deploys the `BioAuthLib` smart contract', async () => {
-    const zkAppInstance = new BioAuthLib(zkAppAddress);
+  it('generates and deploys the `BioAuthLibrary` smart contract', async () => {
+    const zkAppInstance = new BioAuthLibrary(zkAppAddress);
     await localDeploy(zkAppInstance, zkAppPrivateKey, deployerAccount);
     const oraclePublicKey = zkAppInstance.oraclePublicKey.get();
     expect(oraclePublicKey).toEqual(PublicKey.fromBase58(ORACLE_PUBLIC_KEY));
@@ -86,7 +86,7 @@ describe('BioAuthLib', () => {
 
   describe('actual API requests', () => {
     it('emits an event if the account bioauthorization is valid', async () => {
-      const zkAppInstance = new BioAuthLib(zkAppAddress);
+      const zkAppInstance = new BioAuthLibrary(zkAppAddress);
       await localDeploy(zkAppInstance, zkAppPrivateKey, deployerAccount);
 
       // sign the public key to create the payload to bioauthenticate
@@ -115,7 +115,7 @@ describe('BioAuthLib', () => {
     });
 
     it('throws an error if the timestamp on the oracle response has expired even if the signatures are valid', async () => {
-      const zkAppInstance = new BioAuthLib(zkAppAddress);
+      const zkAppInstance = new BioAuthLibrary(zkAppAddress);
       await localDeploy(zkAppInstance, zkAppPrivateKey, deployerAccount);
 
       // sign the public key to create the payload to bioauthenticate
@@ -160,7 +160,7 @@ describe('BioAuthLib', () => {
     };
 
     it('emits an event if the account bioauthorization is valid', async () => {
-      const zkAppInstance = new BioAuthLib(zkAppAddress);
+      const zkAppInstance = new BioAuthLibrary(zkAppAddress);
       await localDeploy(zkAppInstance, zkAppPrivateKey, deployerAccount);
 
       const userPublicKey = userAccountHardcoded.toPublicKey();
@@ -185,7 +185,7 @@ describe('BioAuthLib', () => {
     });
 
     it('throws an error if the timestamp on the oracle response has expired', async () => {
-      const zkAppInstance = new BioAuthLib(zkAppAddress);
+      const zkAppInstance = new BioAuthLibrary(zkAppAddress);
       await localDeploy(zkAppInstance, zkAppPrivateKey, deployerAccount);
 
       const message = BioAuthorizedMessage.fromJSON(data);
@@ -201,7 +201,7 @@ describe('BioAuthLib', () => {
     });
 
     it('throws an error if the oracle signature is invalid', async () => {
-      const zkAppInstance = new BioAuthLib(zkAppAddress);
+      const zkAppInstance = new BioAuthLibrary(zkAppAddress);
       await localDeploy(zkAppInstance, zkAppPrivateKey, deployerAccount);
 
       const data = {
