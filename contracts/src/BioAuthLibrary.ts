@@ -11,8 +11,7 @@ import {
   PrivateKey,
   UInt64,
 } from 'snarkyjs';
-
-import { BioAuthorizedMessage, ProvableBioAuth } from '../lib';
+import { BioAuthorizedMessage, ProvableBioAuth } from 'snarky-bioauth';
 
 // The public key of our trusted data provider
 const ORACLE_PUBLIC_KEY =

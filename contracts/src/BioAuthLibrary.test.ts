@@ -10,9 +10,9 @@ import {
   UInt64,
 } from 'snarkyjs';
 import { jest } from '@jest/globals';
+import { BioAuthorizedMessage } from 'snarky-bioauth';
 
 import { BioAuthLibrary, BIOAUTH_TTL } from './BioAuthLibrary';
-import { BioAuthorizedMessage } from '../lib';
 
 // The public key of our trusted data provider
 const ORACLE_PUBLIC_KEY =

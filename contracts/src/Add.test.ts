@@ -13,7 +13,7 @@ import {
 
 import { jest } from '@jest/globals';
 
-import { BioAuthorizedMessage } from '../lib';
+import { BioAuthorizedMessage } from 'snarky-bioauth';
 
 const BIOAUTH_ORACLE_URL = 'http://localhost:3000';
 
