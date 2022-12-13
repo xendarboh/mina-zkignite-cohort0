@@ -7,9 +7,15 @@ import {
   PrivateKey,
   PublicKey,
   AccountUpdate,
+  Poseidon,
+  UInt64,
 } from 'snarkyjs';
 
 import { jest } from '@jest/globals';
+
+import { BioAuthorizedMessage } from '../lib';
+
+const BIOAUTH_ORACLE_URL = 'http://localhost:3000';
 
 /*
  * This file specifies how to test the `Add` example smart contract. It is safe to delete this file and replace
@@ -27,6 +33,7 @@ describe('Add', () => {
     zkAppAddress: PublicKey,
     zkAppPrivateKey: PrivateKey,
     zkApp: Add;
+  let Local: any;
 
   beforeAll(async () => {
     await isReady;
@@ -34,7 +41,7 @@ describe('Add', () => {
   });
 
   beforeEach(() => {
-    const Local = Mina.LocalBlockchain({ proofsEnabled });
+    Local = Mina.LocalBlockchain({ proofsEnabled });
     Mina.setActiveInstance(Local);
     deployerAccount = Local.testAccounts[0].privateKey;
     zkAppPrivateKey = PrivateKey.random();
@@ -77,5 +84,33 @@ describe('Add', () => {
 
     const updatedNum = zkApp.num.get();
     expect(updatedNum).toEqual(Field(3));
+  });
+
+  it('correctly updates the numBioAuthed state on the `Add` smart contract', async () => {
+    await localDeploy();
+
+    // use the curent number as the payload to bioauthenticate
+    const currentNumBioAuthed = zkApp.numBioAuthed.get();
+    const payload = Poseidon.hash(currentNumBioAuthed.toFields());
+
+    // retrieve data from bioauth oracle
+    // if payload has been authed by user, returns the signed data
+    // if payload has not yet been authed, returns msg indicating TODO
+    const response = await fetch(`${BIOAUTH_ORACLE_URL}/${payload}`);
+    const data = await response.json();
+    const message = BioAuthorizedMessage.fromJSON(data);
+
+    // !! set the local blockchain time to be current
+    Local.setTimestamp(UInt64.from(Date.now()));
+
+    // update transaction
+    const txn = await Mina.transaction(deployerAccount, () => {
+      zkApp.updateBioAuthed(message);
+    });
+    await txn.prove();
+    await txn.send();
+
+    const updatedNumBioAuthed = zkApp.numBioAuthed.get();
+    expect(updatedNumBioAuthed).toEqual(Field(3));
   });
 });
