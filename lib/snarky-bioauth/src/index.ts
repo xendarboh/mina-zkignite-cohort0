@@ -1,3 +1,3 @@
-export * from './bioauth';
-export * from './util';
-export * from './client';
+export * from './bioauth.js';
+export * from './util.js';
+export * from './client.js';

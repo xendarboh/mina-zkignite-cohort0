@@ -1,14 +1,15 @@
-const Koa = require("koa");
-const Router = require("@koa/router");
-const cors = require("@koa/cors");
-const {
+import Koa from "koa";
+import Router from "@koa/router";
+import cors from "@koa/cors";
+import { payloadFromBase58 } from "snarky-bioauth";
+import {
   Encoding,
   Field,
   Poseidon,
   PrivateKey,
   Signature,
   isReady,
-} = require("snarkyjs");
+} from "snarkyjs";
 
 const PORT = process.env.PORT || 3000;
 
@@ -49,9 +50,11 @@ const bioAuthIds = [
 ];
 const getBioAuthId = (x) => bioAuthIds[x % bioAuthIds.length];
 
-async function getSignedBioAuthId(_payload) {
+async function getSignedBioAuthId(id) {
   // We need to wait for SnarkyJS to finish loading before we can do anything
   await isReady;
+
+  const _payload = payloadFromBase58(id);
 
   // The private key of our account. When running locally the hardcoded key will
   // be used. In production the key will be loaded from a Vercel environment
@@ -91,8 +94,9 @@ async function getSignedBioAuthId(_payload) {
 
 // for non-interactive tests
 router.get("/:id", async (ctx) => {
-  ctx.body = await getSignedBioAuthId(ctx.params.id);
-  console.log(`/${ctx.params.id} --> ${ctx.body.data.bioAuthId}`);
+  const id = ctx.params.id;
+  ctx.body = await getSignedBioAuthId(id);
+  console.log(`/${id} --> ${ctx.body.data.bioAuthId}`);
 });
 
 // an in-memory store of bioauthenticated payloads
@@ -104,11 +108,11 @@ router.get("/mina/:id", async (ctx) => {
   const id = ctx.params.id;
   if (signedBioAuths[id]) {
     ctx.body = signedBioAuths[id];
-    console.log(`[200] /mina/${ctx.params.id} --> ${ctx.body.data.bioAuthId}`);
+    console.log(`[200] /mina/${id} --> ${ctx.body.data.bioAuthId}`);
   } else {
     ctx.status = 404;
     ctx.body = { error: "404" };
-    console.log(`[404] /mina/${ctx.params.id}`);
+    console.log(`[404] /mina/${id}`);
   }
 });
 
@@ -117,9 +121,7 @@ router.get("/mina/auth/:id", async (ctx) => {
   const signed = await getSignedBioAuthId(id);
   signedBioAuths[id] = signed;
   ctx.body = signedBioAuths[id];
-  console.log(
-    `[200] /mina/auth/${ctx.params.id} --> ${ctx.body.data.bioAuthId}`
-  );
+  console.log(`[200] /mina/auth/${id} --> ${signed.data.bioAuthId}`);
 });
 
 app.use(router.routes()).use(router.allowedMethods());

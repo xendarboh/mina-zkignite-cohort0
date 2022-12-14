@@ -10,7 +10,7 @@ import {
   UInt64,
 } from 'snarkyjs';
 import { jest } from '@jest/globals';
-import { BioAuthorizedMessage } from 'snarky-bioauth';
+import { BioAuthorizedMessage, payloadToBase58 } from 'snarky-bioauth';
 
 import { BioAuthLibrary, BIOAUTH_TTL } from './BioAuthLibrary';
 
@@ -92,9 +92,10 @@ describe('BioAuthLibrary', () => {
       // sign the public key to create the payload to bioauthenticate
       const userPublicKey = userAccount.toPublicKey();
       const userSig = Signature.create(userAccount, userPublicKey.toFields());
-      const sigHash = Poseidon.hash(userSig.toFields()).toString();
+      const hash = Poseidon.hash(userSig.toFields());
+      const id = payloadToBase58(hash);
 
-      const response = await fetch(`${ORACLE_URL}/${sigHash}`);
+      const response = await fetch(`${ORACLE_URL}/${id}`);
       const data = await response.json();
       const message = BioAuthorizedMessage.fromJSON(data);
 
@@ -121,9 +122,10 @@ describe('BioAuthLibrary', () => {
       // sign the public key to create the payload to bioauthenticate
       const userPublicKey = userAccount.toPublicKey();
       const userSig = Signature.create(userAccount, userPublicKey.toFields());
-      const sigHash = Poseidon.hash(userSig.toFields()).toString();
+      const hash = Poseidon.hash(userSig.toFields());
+      const id = payloadToBase58(hash);
 
-      const response = await fetch(`${ORACLE_URL}/${sigHash}`);
+      const response = await fetch(`${ORACLE_URL}/${id}`);
       const data = await response.json();
       const message = BioAuthorizedMessage.fromJSON(data);
 

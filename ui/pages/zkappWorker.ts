@@ -1,6 +1,6 @@
-import { Mina, isReady, PublicKey, fetchAccount } from "snarkyjs";
+import { Mina, isReady, PublicKey, fetchAccount, Field } from "snarkyjs";
 
-import { BioAuthorizedMessage } from "../../contracts/build/lib";
+import { BioAuthorizedMessage, BioAuthOracle } from "snarky-bioauth";
 
 type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
@@ -8,10 +8,13 @@ type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
 import type { Add } from "../../contracts/src/Add";
 
+const BIOAUTH_ORACLE_URL = "http://localhost:3000/mina";
+
 const state = {
   Add: null as null | typeof Add,
   zkapp: null as null | Add,
   transaction: null as null | Transaction,
+  bioAuthOracle: null as null | BioAuthOracle,
 };
 
 // ---------------------------------------------------------------------------------------
@@ -19,6 +22,7 @@ const state = {
 const functions = {
   loadSnarkyJS: async (args: {}) => {
     await isReady;
+    state.bioAuthOracle = new BioAuthOracle(BIOAUTH_ORACLE_URL);
   },
   setActiveInstanceToBerkeley: async (args: {}) => {
     const Berkeley = Mina.BerkeleyQANet(
@@ -48,6 +52,12 @@ const functions = {
   getNumBioAuthed: async (args: {}) => {
     const currentNumBioAuthed = await state.zkapp!.numBioAuthed.get();
     return JSON.stringify(currentNumBioAuthed.toJSON());
+  },
+  fetchBioAuth: async (args: { payload: Field }) => {
+    return await state.bioAuthOracle!.fetchBioAuth(args.payload);
+  },
+  getBioAuthLink: async (args: { bioAuthId: string }) => {
+    return state.bioAuthOracle!.getBioAuthLink(args.bioAuthId);
   },
   createUpdateTransaction: async (args: {}) => {
     const transaction = await Mina.transaction(() => {

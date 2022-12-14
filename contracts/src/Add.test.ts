@@ -13,7 +13,7 @@ import {
 
 import { jest } from '@jest/globals';
 
-import { BioAuthorizedMessage } from 'snarky-bioauth';
+import { BioAuthorizedMessage, payloadToBase58 } from 'snarky-bioauth';
 
 const BIOAUTH_ORACLE_URL = 'http://localhost:3000';
 
@@ -94,9 +94,8 @@ describe('Add', () => {
     const payload = Poseidon.hash(currentNumBioAuthed.toFields());
 
     // retrieve data from bioauth oracle
-    // if payload has been authed by user, returns the signed data
-    // if payload has not yet been authed, returns msg indicating TODO
-    const response = await fetch(`${BIOAUTH_ORACLE_URL}/${payload}`);
+    const id = payloadToBase58(payload);
+    const response = await fetch(`${BIOAUTH_ORACLE_URL}/${id}`);
     const data = await response.json();
     const message = BioAuthorizedMessage.fromJSON(data);
 

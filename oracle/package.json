@@ -8,6 +8,7 @@
     "start": "node index.js",
     "keygen": "node scripts/keygen.js"
   },
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jackryanservia/mina-credit-score-signer.git"

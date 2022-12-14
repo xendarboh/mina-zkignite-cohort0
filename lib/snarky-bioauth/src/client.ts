@@ -1,5 +1,6 @@
 import { Field } from 'snarkyjs';
-import { payloadToBase58 } from './util';
+
+import { payloadToBase58 } from './util.js';
 
 export { BioAuthOracle };
 
@@ -16,15 +17,25 @@ class BioAuthOracle {
   }
 
   /**
-   * Get a URL to retrieve the data for a bioauth'd payload.
-   * The response status will have 404 if the payload has not yet been authed.
+   * From the given payload, returns a signed BioAuth and its id from the
+   * oracle server.
    *
-   * @return {*}  {string}
+   * The id is always returned so an auth link may be requested.
+   *
+   * The signed data is null if it does not exist.
+   *
+   * @return {*}  {[string, null | string]}
    * @memberof BioAuthOracle
    */
-  public async fetchBioAuth(payload: Field): Promise<Response> {
+  // public async fetchBioAuth(payload: Field): Promise<null | string> {
+  public async fetchBioAuth(payload: Field): Promise<[string, null | string]> {
     const id = payloadToBase58(payload);
-    return await fetch(`${this.url}/${id}`);
+    const response = await fetch(`${this.url}/${id}`);
+
+    if (response.status == 404) return [id, null];
+
+    const data = await response.json();
+    return [id, JSON.stringify(data)];
   }
 
   /**

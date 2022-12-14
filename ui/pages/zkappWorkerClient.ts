@@ -52,6 +52,16 @@ export default class ZkappWorkerClient {
     return Field.fromJSON(JSON.parse(result as string));
   }
 
+  async fetchBioAuth(payload: Field): Promise<[string, null | string]> {
+    const result = await this._call("fetchBioAuth", { payload });
+    return result as [string, null | string];
+  }
+
+  async getBioAuthLink(bioAuthId: string): Promise<string> {
+    const result = await this._call("getBioAuthLink", { bioAuthId });
+    return result as string;
+  }
+
   createUpdateTransaction() {
     return this._call("createUpdateTransaction", {});
   }

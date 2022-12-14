@@ -14,6 +14,7 @@ import {
 } from 'snarkyjs';
 
 import { jest } from '@jest/globals';
+import { payloadToBase58 } from 'snarky-bioauth';
 
 // The public key of our trusted data provider
 const ORACLE_PUBLIC_KEY =
@@ -105,9 +106,10 @@ describe('BioAuthOracle', () => {
       // sign the public key to create the payload to bioauthenticate
       const userPublicKey = userAccount.toPublicKey();
       const userSig = Signature.create(userAccount, userPublicKey.toFields());
-      const sigHash = Poseidon.hash(userSig.toFields()).toString();
+      const hash = Poseidon.hash(userSig.toFields());
+      const id = payloadToBase58(hash);
 
-      const response = await fetch(`${ORACLE_URL}/${sigHash}`);
+      const response = await fetch(`${ORACLE_URL}/${id}`);
       const data = await response.json();
 
       const payload = Field(data.data.payload);
@@ -149,9 +151,10 @@ describe('BioAuthOracle', () => {
       // sign the public key to create the payload to bioauthenticate
       const userPublicKey = userAccount.toPublicKey();
       const userSig = Signature.create(userAccount, userPublicKey.toFields());
-      const sigHash = Poseidon.hash(userSig.toFields()).toString();
+      const hash = Poseidon.hash(userSig.toFields());
+      const id = payloadToBase58(hash);
 
-      const response = await fetch(`${ORACLE_URL}/${sigHash}`);
+      const response = await fetch(`${ORACLE_URL}/${id}`);
       const data = await response.json();
 
       const payload = Field(data.data.payload);
