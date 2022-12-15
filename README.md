@@ -1,6 +1,6 @@
 # zkBioAuth
 
-## Mina x Humanode
+## Mina <•> Humanode
 
 Bridging Humanode with Mina zkApps to facilitate Zero-Knowledge proofs of
 unique, living, biometric identity without revealing any personally identifying
@@ -28,7 +28,7 @@ information.
 
 #### UI & Smart Contracts
 
-- ✅ bioauthorize generic data using the Mina x Humanode ZK Oracle
+- ✅ bioauthorize generic data using the Mina <•> Humanode ZK Oracle
 - 🚧 register a Mina account as a bio-authorized account belonging to a unique
   living human
 

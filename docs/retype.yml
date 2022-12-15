@@ -3,9 +3,9 @@ output: build
 url: https://mina-hmnd.zkhumans.io/
 branding:
   title: zkBioAuth
-  label: Mina x Humanode
+  label: Mina <•> Humanode
 meta:
-  title: " | Mina x Humanode | zkHumans"
+  title: " | Mina <•> Humanode | zkHumans"
 links:
   - text: zkApp
     link: https://mina-hmnd.zkhumans.io/zkApp
