@@ -46,3 +46,13 @@ crypto-biometric identifiers to bioauthorize signed and timestamped proofs.
 
 Used to mock behavior of the deployed zkBioAuth Oracle for local development and
 tests.
+
+## Build
+
+1. To support local development, `npm link` the `snarky-bioauth` library in each
+   of the project components, manually or with the helper script:
+   ```sh
+   scripts/npm-link-libs.sh
+   ```
+1. Run the test oracle prior to running contract tests.
+1. For UI, build contracts first.
