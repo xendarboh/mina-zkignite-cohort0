@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { PublicKey, Field, Poseidon } from "snarkyjs";
 
+import { Alert } from "../components/alert";
+import { Navbar } from "../components/navbar";
 import "../styles/globals.css";
 import "./reactCOIServiceWorker";
 import ZkappWorkerClient from "./zkappWorkerClient";
 
 const transactionFee = 0.1;
-
-const BIOAUTH_ORACLE_URL = "http://localhost:3000/mina";
 
 export default function App() {
   let [state, setState] = useState({
@@ -17,6 +17,7 @@ export default function App() {
     accountExists: false,
     currentNum: null as null | Field,
     errorMsg: null as null | string,
+    // statusMsg: null as null | string,
     publicKey: null as null | PublicKey,
     zkappPublicKey: null as null | PublicKey,
     creatingTransaction: false,
@@ -24,6 +25,9 @@ export default function App() {
     bioAuthLink: null as null | string,
     currentNumBioAuthed: null as null | Field,
     hasBioAuth: false,
+    // loading functions
+    hasSnarky: false,
+    hasZkApp: false,
   });
 
   // -------------------------------------------------------
@@ -35,8 +39,14 @@ export default function App() {
         const zkappWorkerClient = new ZkappWorkerClient();
 
         console.log("Loading SnarkyJS...");
+        // setState((s) => ({ ...s, statusMsg: "Loading SnarkyJS..." }));
         await zkappWorkerClient.loadSnarkyJS();
         console.log("done");
+        setState((s) => ({
+          ...s,
+          hasSnarky: true,
+          // statusMsg: "Loading SnarkyJS... done",
+        }));
 
         await zkappWorkerClient.setActiveInstanceToBerkeley();
 
@@ -46,6 +56,7 @@ export default function App() {
           setState((s) => ({ ...s, hasWallet: false }));
           return;
         }
+        setState((s) => ({ ...s, hasWallet: true }));
 
         const publicKeyBase58: string = (await mina.requestAccounts())[0];
         const publicKey = PublicKey.fromBase58(publicKeyBase58);
@@ -57,12 +68,15 @@ export default function App() {
           publicKey: publicKey!,
         });
         const accountExists = res.error == null;
+        console.log("checking if account exists... done");
+        setState((s) => ({ ...s, accountExists }));
 
         await zkappWorkerClient.loadContract();
 
         console.log("compiling zkApp");
         await zkappWorkerClient.compileContract();
         console.log("zkApp compiled");
+        setState((s) => ({ ...s, hasZkApp: true }));
 
         const zkappPublicKey = PublicKey.fromBase58(
           "B62qoc3ADEaKWKoHxpzzREiiadqZCf5XG3H9fi3r2SibJFSTb1tmu21"
@@ -303,6 +317,7 @@ export default function App() {
     mainContent = (
       <div>
         <button
+          className="btn btn-primary"
           onClick={onSendTransaction}
           disabled={state.creatingTransaction}
         >
@@ -311,6 +326,7 @@ export default function App() {
         <div> Current Number in zkApp: {state.currentNum!.toString()} </div>
         <hr />
         <button
+          className="btn btn-primary"
           onClick={onSendTransactionBioAuthed}
           disabled={state.creatingTransaction}
         >
@@ -320,23 +336,50 @@ export default function App() {
           Current Bio-Authed Number in zkApp:{" "}
           {state.currentNumBioAuthed?.toString()}
         </div>
-        <button onClick={onRefreshCurrentState}> Get Latest State </button>
+        <button className="btn btn-primary" onClick={onRefreshCurrentState}>
+          Get Latest State
+        </button>
       </div>
     );
   }
 
   return (
-    <div>
-      {setup}
-      {accountDoesNotExist}
-      {txnNeedsBioAuth}
-      {mainContent}
-      {state.errorMsg && (
-        <div>
-          <hr />
-          {state.errorMsg}
+    <div className="flex h-full flex-col">
+      <Navbar loading={!state.hasBeenSetup} />
+      <div className="navbar justify-center border-y">
+        <div className="navbar-center">
+          <ul className="steps steps-vertical lg:steps-horizontal">
+            <li className={`step ${state.hasSnarky && "step-primary"}`}>
+              &emsp;SnarkyJS&emsp;
+            </li>
+            <li className={`step ${state.hasWallet && "step-primary"}`}>
+              Wallet
+            </li>
+            <li className={`step ${state.accountExists && "step-primary"}`}>
+              Account
+            </li>
+            <li className={`step ${state.hasZkApp && "step-primary"}`}>
+              zkApp
+            </li>
+            <li className={`step ${state.hasBioAuth && "step-primary"}`}>
+              BioAuth
+            </li>
+          </ul>
         </div>
-      )}
+      </div>
+      <div className="base-content flex flex-col h-full">
+        {state.errorMsg && (
+          <div className="mx-20 my-8">
+            <Alert mode="error">
+              <span>{state.errorMsg}</span>
+            </Alert>
+          </div>
+        )}
+        {setup}
+        {accountDoesNotExist}
+        {txnNeedsBioAuth}
+        {mainContent}
+      </div>
     </div>
   );
 }
