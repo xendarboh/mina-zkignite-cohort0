@@ -8,7 +8,11 @@ type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
 import type { Add } from "../../contracts/src/Add";
 
-const BIOAUTH_ORACLE_URL = "http://localhost:3000/mina";
+// Use a locally running oracle-test server
+// const BIOAUTH_ORACLE_URL = "http://localhost:3000/mina";
+
+// Or use the deployed oracle
+const BIOAUTH_ORACLE_URL = "https://auth.zkhumans.io/mina";
 
 const state = {
   Add: null as null | typeof Add,
