@@ -17,6 +17,7 @@
     "build": "tsc -p tsconfig.json",
     "buildw": "tsc -p tsconfig.json --watch",
     "coverage": "node --experimental-vm-modules --experimental-wasm-modules --experimental-wasm-threads node_modules/jest/bin/jest.js --coverage",
+    "docs": "typedoc --plugin typedoc-plugin-markdown src/index.ts --exclude **/*.test.ts --out build/docs",
     "format": "prettier --write --ignore-unknown **/*",
     "test": "node --experimental-vm-modules --experimental-wasm-modules --experimental-wasm-threads node_modules/jest/bin/jest.js",
     "testw": "node --experimental-vm-modules --experimental-wasm-modules --experimental-wasm-threads node_modules/jest/bin/jest.js --watch",

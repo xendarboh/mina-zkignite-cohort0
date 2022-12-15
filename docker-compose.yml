@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  production:
+    profiles: ["production"]
+    image: ${REPO}/mina-hmnd.zkhumans.io:${TAG}
+    container_name: ${HOSTNAME}
+    hostname: ${HOSTNAME}
+    network_mode: bridge
+    restart: always
+    build:
+      context: ./
+      args:
+        - SWS_IMAGE=${SWS_IMAGE}
+        - SWS_TAG=${SWS_TAG}
+    environment:
+      - SERVER_PORT=80
+      - SERVER_ROOT=/public
+      - SERVER_LOG_LEVEL=info
+      - VIRTUAL_HOST=${HOSTNAME}
+      - LETSENCRYPT_HOST=${HOSTNAME}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+
+  dev:
+    profiles: ["dev"]
+    extends:
+      service: production
+    environment:
+      - SERVER_PORT=2222
+    ports:
+      - "2222:2222"

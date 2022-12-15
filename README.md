@@ -26,6 +26,8 @@ information.
 
 ### zkApp
 
+#### UI & Smart Contracts
+
 - ✅ bioauthorize generic data using the Mina x Humanode ZK Oracle
 - 🚧 register a Mina account as a bio-authorized account belonging to a unique
   living human
@@ -56,3 +58,22 @@ tests.
    ```
 1. Run the test oracle prior to running contract tests.
 1. For UI, build contracts first.
+
+## Deploy
+
+See individual components for their specific-deployment options.
+
+### Docker
+
+The static HTML zkApp and documentation may be deployed with docker.
+
+1. Copy the example config environment, then edit `.env`
+   ```sh
+   cp .env.example .env
+   ```
+1. Build and run the docker container (designed to run with
+   [nginx-proxy](https://github.com/nginx-proxy/nginx-proxy) +
+   [automated SSL](https://github.com/nginx-proxy/acme-companion))
+   ```sh
+   docker compose --profile production up
+   ```
