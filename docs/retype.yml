@@ -1,0 +1,25 @@
+input: ..
+output: .retype
+url: https://mina-hmnd.zkhumans.io/
+branding:
+  title: zkBioAuth
+  label: Mina x Humanode
+meta:
+  title: " | Mina x Humanode | zkHumans"
+links:
+  - text: zkApp
+    link: https://mina.zkhumans.io/zkApp
+    icon: rocket
+    target: blank
+  - text: zkOracle
+    link: https://auth.zkhumans.io/
+    icon: arrow-switch
+    target: blank
+  - text: "Source"
+    link: https://github.com/xendarboh/mina-zkignite-cohort0
+    icon: mark-github
+  - text: "Deployed Contract"
+    link: https://minascan.io/
+    icon: log
+footer:
+  copyright: "&copy; Copyright {{ year }}. All rights reserved."

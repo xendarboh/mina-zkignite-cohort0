@@ -1,5 +1,13 @@
-# mina-credit-score-signer
+---
+label: Test Oracle
+order: -100
+---
 
-Koa API that signs a specified user’s fake credit score with a Mina compatible signature scheme. Created for use in [this tutorial](https://docs.minaprotocol.com/zkapps/tutorials/oracle).
+# zkBioAuth Test Oracle
 
-[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/jackryanservia/mina-credit-score-signer/tree/main)
+Simple Koa API simulating the conventions and API of a **zkBioAuth Oracle**.
+
+Use this for more rapid local development and tests.
+
+Signs a user-provided payload with a Mina compatible signature scheme and a
+timestamped bioauthorization.

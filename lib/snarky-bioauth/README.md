@@ -1,6 +1,9 @@
-# Mina zkApp: Xx Humanode X Mina
+# snarky-bioauth
 
-This template uses TypeScript.
+BioAuth tools for SnarkyJS.
+
+This library provides utilities for interacting with a **zkBioAuth Oracle** and
+working with bioAuth ZK proofs within Mina Smart Contracts.
 
 ## How to build
 

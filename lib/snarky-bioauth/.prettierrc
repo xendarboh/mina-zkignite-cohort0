@@ -1,4 +1,12 @@
 {
+  "overrides": [
+    {
+      "files": "*.md",
+      "options": {
+        "proseWrap": "always"
+      }
+    }
+  ],
   "semi": true,
   "singleQuote": true,
   "tabWidth": 2,
