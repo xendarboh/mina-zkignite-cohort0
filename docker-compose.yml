@@ -3,7 +3,7 @@ version: "3.8"
 services:
   production:
     profiles: ["production"]
-    image: ${REPO}/mina-hmnd.zkhumans.io:${TAG}
+    image: ${REPO}/${HOSTNAME}:${TAG}
     container_name: ${HOSTNAME}
     hostname: ${HOSTNAME}
     network_mode: bridge
@@ -20,12 +20,3 @@ services:
       - VIRTUAL_HOST=${HOSTNAME}
       - LETSENCRYPT_HOST=${HOSTNAME}
       - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
-
-  dev:
-    profiles: ["dev"]
-    extends:
-      service: production
-    environment:
-      - SERVER_PORT=2222
-    ports:
-      - "2222:2222"
