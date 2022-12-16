@@ -274,27 +274,23 @@ export default function App() {
     );
   }
 
-  let setupText = state.hasBeenSetup
-    ? "SnarkyJS Ready"
-    : "Setting up SnarkyJS...";
-  let setup = (
-    <div>
-      {" "}
-      {setupText} {hasWallet}
-    </div>
-  );
+  let setup = <div>{hasWallet}</div>;
 
   let accountDoesNotExist;
   if (state.hasBeenSetup && !state.accountExists) {
     const faucetLink =
       "https://faucet.minaprotocol.com/?address=" + state.publicKey!.toBase58();
     accountDoesNotExist = (
-      <div>
-        Account does not exist. Please visit the faucet to fund this account
-        <a href={faucetLink} target="_blank" rel="noreferrer">
-          {" "}
-          [Link]{" "}
-        </a>
+      <div className="w-2/4">
+        <Alert mode="info">
+          <div>
+            Account does not exist. Please visit the faucet to fund this account
+            <a href={faucetLink} target="_blank" rel="noreferrer">
+              {" "}
+              [Link]{" "}
+            </a>
+          </div>
+        </Alert>
       </div>
     );
   }
@@ -302,12 +298,21 @@ export default function App() {
   let txnNeedsBioAuth;
   if (state.hasBeenSetup && !state.hasBioAuth && state.bioAuthLink) {
     txnNeedsBioAuth = (
-      <div>
-        The transaction needs authorization. Please visit the bio-authorizor to
-        approve this transaction then re-send.{" "}
-        <a href={state.bioAuthLink} target="_blank" rel="noreferrer">
-          [BioAuth]
-        </a>
+      <div className="w-2/4">
+        <Alert mode="info">
+          <div>
+            The transaction needs authorization. Please visit the bio-authorizor
+            to approve this transaction then re-send.&emsp;
+            <a
+              className="link"
+              href={state.bioAuthLink}
+              target="_blank"
+              rel="noreferrer"
+            >
+              [BioAuth]
+            </a>
+          </div>
+        </Alert>
       </div>
     );
   }
@@ -315,58 +320,78 @@ export default function App() {
   let mainContent;
   if (state.hasBeenSetup && state.accountExists) {
     mainContent = (
-      <div>
+      <div className="flex flex-col items-center space-y-8 mt-8">
+        {/*
         <button
-          className="btn btn-primary"
+          className="btn btn-primary normal-case"
           onClick={onSendTransaction}
           disabled={state.creatingTransaction}
         >
           Send Transaction
         </button>
+        */}
         <div> Current Number in zkApp: {state.currentNum!.toString()} </div>
-        <hr />
         <button
-          className="btn btn-primary"
+          className="btn btn-primary normal-case"
           onClick={onSendTransactionBioAuthed}
           disabled={state.creatingTransaction}
         >
-          Send Transaction BioAuthed
+          Send BioAuthed Transaction
         </button>
         <div>
           Current Bio-Authed Number in zkApp:{" "}
           {state.currentNumBioAuthed?.toString()}
         </div>
-        <button className="btn btn-primary" onClick={onRefreshCurrentState}>
+        <button
+          className="btn btn-primary normal-case"
+          onClick={onRefreshCurrentState}
+        >
           Get Latest State
         </button>
       </div>
     );
   }
 
+  const collapse =
+    state.hasSnarky && state.hasWallet && state.accountExists && state.hasZkApp;
+
   return (
     <div className="flex h-full flex-col">
       <Navbar loading={!state.hasBeenSetup} />
-      <div className="navbar justify-center border-y">
-        <div className="navbar-center">
-          <ul className="steps steps-vertical lg:steps-horizontal">
-            <li className={`step ${state.hasSnarky && "step-primary"}`}>
-              &emsp;SnarkyJS&emsp;
-            </li>
-            <li className={`step ${state.hasWallet && "step-primary"}`}>
-              Wallet
-            </li>
-            <li className={`step ${state.accountExists && "step-primary"}`}>
-              Account
-            </li>
-            <li className={`step ${state.hasZkApp && "step-primary"}`}>
-              zkApp
-            </li>
-            <li className={`step ${state.hasBioAuth && "step-primary"}`}>
-              BioAuth
-            </li>
-          </ul>
+
+      <div
+        tabIndex={0}
+        className={`collapse ${
+          collapse ? "collapse-close" : "collapse-open"
+        } border-b`}
+      >
+        <div className="collapse-content">
+          <div className="navbar justify-center">
+            <div className="navbar-center">
+              <ul className="steps steps-vertical lg:steps-horizontal">
+                <li className={`step ${state.hasSnarky && "step-primary"}`}>
+                  &emsp;SnarkyJS&emsp;
+                </li>
+                <li className={`step ${state.hasWallet && "step-primary"}`}>
+                  &emsp;Wallet&emsp;
+                </li>
+                <li className={`step ${state.accountExists && "step-primary"}`}>
+                  &emsp;Account&emsp;
+                </li>
+                <li className={`step ${state.hasZkApp && "step-primary"}`}>
+                  &emsp;zkApp&emsp;
+                </li>
+                {/*
+                <li className={`step ${state.hasBioAuth && "step-primary"}`}>
+                  &emsp;BioAuth&emsp;
+                </li>
+                */}
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
+
       <div className="base-content flex flex-col h-full">
         {state.errorMsg && (
           <div className="mx-20 my-8">
@@ -375,9 +400,11 @@ export default function App() {
             </Alert>
           </div>
         )}
-        {setup}
-        {accountDoesNotExist}
-        {txnNeedsBioAuth}
+        <div className="flex flex-col items-center space-y-8">
+          {setup}
+          {accountDoesNotExist}
+          {txnNeedsBioAuth}
+        </div>
         {mainContent}
       </div>
     </div>

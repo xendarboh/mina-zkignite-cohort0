@@ -2,9 +2,8 @@
 
 ## Mina <•> Humanode
 
-Bridging Humanode with Mina zkApps to facilitate Zero-Knowledge proofs of
-unique, living, biometric identity without revealing any personally identifying
-information.
+Bridging Humanode with Mina to facilitate Zero-Knowledge proofs of unique living
+humans with biometric identity and authentication on Mina.
 
 ## Features & Facilitations
 
@@ -41,8 +40,9 @@ bioAuth ZK proofs within Mina Smart Contracts.
 
 ### Oracle
 
-A Mina _Oracle_ and _Offline Storage Server_ that enables users to use Humanode
-crypto-biometric identifiers to bioauthorize signed and timestamped proofs.
+An interactive cross-chain Mina _Oracle_ and _Offline Storage Server_ that
+enables users to use Humanode crypto-biometric identifiers to bioauthorize
+signed and timestamped proofs.
 
 #### Oracle Test
 
