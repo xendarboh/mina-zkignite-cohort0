@@ -5,7 +5,10 @@
 Bridging Humanode with Mina to facilitate Zero-Knowledge proofs of unique living
 humans with biometric identity and authentication on Mina.
 
-[https://mina-hmnd.zkhumans.io/](https://mina-hmnd.zkhumans.io/)
+Docs: [https://mina-hmnd.zkhumans.io/](https://mina-hmnd.zkhumans.io/)
+
+Production Oracle repo:
+[mina-oracle-humanode](https://github.com/xendarboh/mina-oracle-humanode)
 
 ## Facilitations
 
@@ -43,7 +46,6 @@ General process and user interaction, a Mina zkApp:
 ## Deployments
 
 - Oracle: [https://auth.zkhumans.io/](https://auth.zkhumans.io/)
-- Docs: [https://mina-hmnd.zkhumans.io/](https://mina-hmnd.zkhumans.io/)
 - zkApp:
   [https://mina-hmnd.zkhumans.io/zkApp/](https://mina-hmnd.zkhumans.io/zkApp/)
 
@@ -51,9 +53,7 @@ General process and user interaction, a Mina zkApp:
 
 ### zkApp
 
-#### UI & Smart Contracts
-
-- ✅ bioauthorize generic data using the Mina <•> Humanode ZK Oracle
+- ✅ demonstrate bioauth of generic data using the Mina <•> Humanode ZK Oracle
 - 🚧 register a Mina account as a bio-authorized account belonging to a unique
   living human
 
@@ -63,16 +63,12 @@ An interactive cross-chain Mina _Oracle_ and _Offline Storage Server_ that
 enables users to use Humanode crypto-biometric identifiers to bioauthorize
 signed and timestamped proofs.
 
-#### Production
-
-#### Oracle Test
+### oracle-test
 
 Used to mock behavior of the deployed zkBioAuth Oracle for local development and
 tests.
 
-### Libraries
-
-#### snarky-bioauth
+### snarky-bioauth library
 
 Utilities for interacting with a zkBioAuth Oracle and working with bioAuth ZK
 proofs within Mina Smart Contracts and zkApps.
@@ -81,7 +77,7 @@ proofs within Mina Smart Contracts and zkApps.
 
 Refer to the
 [Dockerfile](https://github.com/xendarboh/mina-zkignite-cohort0/blob/main/Dockerfile)
-for order and details of a complete build of the zkApp and docs.
+for order and details of a complete build of the components.
 
 For the production oracle, refer to its project repo:
 [mina-oracle-humanode](https://github.com/xendarboh/mina-oracle-humanode).
