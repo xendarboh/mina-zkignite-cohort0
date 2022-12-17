@@ -123,6 +123,7 @@ This project originated as a submission for Mina Protocol's Hackathon
   code:
   [mina-oracle-humanode](https://github.com/xendarboh/mina-oracle-humanode)
 - Instructions on how to use the oracle from a zkApp:
+  [How it works](https://github.com/xendarboh/mina-zkignite-cohort0#how-it-works)
 - Explanation of where to find the demo code:
   [ui](https://github.com/xendarboh/mina-zkignite-cohort0/tree/main/ui),
   [contracts](https://github.com/xendarboh/mina-zkignite-cohort0/tree/main/contracts/src)
