@@ -336,7 +336,7 @@ export default function App() {
           onClick={onSendTransactionBioAuthed}
           disabled={state.creatingTransaction}
         >
-          Send BioAuth'd Transaction
+          Send BioAuthed Transaction
         </button>
         <div>
           BioAuthorized Transactions: {state.currentNumBioAuthed?.toString()}
