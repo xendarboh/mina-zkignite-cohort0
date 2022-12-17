@@ -329,24 +329,23 @@ export default function App() {
         >
           Send Transaction
         </button>
-        */}
         <div> Current Number in zkApp: {state.currentNum!.toString()} </div>
+        */}
         <button
           className="btn btn-primary normal-case"
           onClick={onSendTransactionBioAuthed}
           disabled={state.creatingTransaction}
         >
-          Send BioAuthed Transaction
+          Send BioAuth'd Transaction
         </button>
         <div>
-          Current Bio-Authed Number in zkApp:{" "}
-          {state.currentNumBioAuthed?.toString()}
+          BioAuthorized Transactions: {state.currentNumBioAuthed?.toString()}
         </div>
         <button
           className="btn btn-primary normal-case"
           onClick={onRefreshCurrentState}
         >
-          Get Latest State
+          Refresh State
         </button>
       </div>
     );
