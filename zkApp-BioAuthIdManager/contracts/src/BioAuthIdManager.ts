@@ -30,14 +30,12 @@ const ORACLE_PUBLIC_KEY =
 // bio-authorization is valid
 export const BIOAUTH_TTL = 1000 * 60 * 10; // 10 minutes
 
+// we need the initiate tree root in order to tell the contract about our off-chain storage
+let initialCommitment: Field = Field(0);
+
 /**
- * Basic Example
- * See https://docs.minaprotocol.com/zkapps for more info.
- *
- * The BioAuthIdManager contract initializes the state variable 'num' to be a Field(1) value by default when deployed.
- * When the 'update' method is called, the BioAuthIdManager contract adds Field(2) to its 'num' contract state.
- *
- * This file is safe to delete and replace with your own contract.
+ * BioAuthIdManager; a smart contract that serves as a registry of Mina
+ * Accounts that are bio-authorized and registered to unique living humans.
  */
 export class BioAuthIdManager extends SmartContract {
   @state(Field) num = State<Field>();
