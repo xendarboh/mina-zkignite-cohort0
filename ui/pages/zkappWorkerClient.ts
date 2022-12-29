@@ -42,11 +42,6 @@ export default class ZkappWorkerClient {
     });
   }
 
-  async getNum(): Promise<Field> {
-    const result = await this._call("getNum", {});
-    return Field.fromJSON(JSON.parse(result as string));
-  }
-
   async getNumBioAuthed(): Promise<Field> {
     const result = await this._call("getNumBioAuthed", {});
     return Field.fromJSON(JSON.parse(result as string));
@@ -62,13 +57,13 @@ export default class ZkappWorkerClient {
     return result as string;
   }
 
-  createUpdateTransaction() {
-    return this._call("createUpdateTransaction", {});
-  }
-
-  async createUpdateBioAuthedTransaction(data: string): Promise<null | string> {
+  async createUpdateBioAuthedTransaction(
+    bioAuth: string,
+    publicKey: PublicKey
+  ): Promise<null | string> {
     const result = await this._call("createUpdateBioAuthedTransaction", {
-      data,
+      bioAuth,
+      publicKey58: publicKey.toBase58(),
     });
     return result ? (result as string) : null;
   }

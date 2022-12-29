@@ -18,8 +18,8 @@ links:
   - text: "Source"
     link: https://github.com/xendarboh/mina-zkignite-cohort0
     icon: mark-github
-  - text: "Deployed Contract"
-    link: https://minascan.io/
+  - text: "Contract"
+    link: https://berkeley.minaexplorer.com/wallet/B62qjGm9FqsQA4AKqGVr8MLPacqqGCFqfjjLa68X87m1en8T9vRWFdr
     icon: log
 footer:
   copyright: "&copy; Copyright {{ year }}. All rights reserved."

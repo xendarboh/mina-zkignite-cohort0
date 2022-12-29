@@ -7,8 +7,8 @@ order: 400
 
 ## Contracts
 
-- [BioAuthLibrary.ts](https://github.com/xendarboh/mina-zkignite-cohort0/blob/main/contracts/src/BioAuthLibrary.ts)
-  BioAuth proof validation using the `snarky-bioauth` library
+- [BioAuth.ts](https://github.com/xendarboh/mina-zkignite-cohort0/blob/main/contracts/src/BioAuth.ts)
+  BioAuth proof validation and event emission using the `snarky-bioauth` library
 - [BioAuthOracle.ts](https://github.com/xendarboh/mina-zkignite-cohort0/blob/main/contracts/src/BioAuthOracle.ts)
   BioAuth proof validation without using the `snarky-bioauth` library
 - [Add.ts](https://github.com/xendarboh/mina-zkignite-cohort0/blob/main/contracts/src/Add.ts)

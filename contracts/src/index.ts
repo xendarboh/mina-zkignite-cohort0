@@ -1,5 +1,5 @@
 import { Add } from './Add.js';
+import { BioAuth } from './BioAuth';
 import { BioAuthOracle } from './BioAuthOracle';
-import { BioAuthLibrary } from './BioAuthLibrary';
 
-export { Add, BioAuthOracle, BioAuthLibrary };
+export { Add, BioAuthOracle, BioAuth };

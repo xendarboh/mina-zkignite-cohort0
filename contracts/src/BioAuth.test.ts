@@ -12,7 +12,7 @@ import {
 import { jest } from '@jest/globals';
 import { BioAuthorizedMessage, payloadToBase58 } from 'snarky-bioauth';
 
-import { BioAuthLibrary, BIOAUTH_TTL } from './BioAuthLibrary';
+import { BioAuth } from './BioAuth';
 
 // The public key of our trusted data provider
 const ORACLE_PUBLIC_KEY =
@@ -23,21 +23,20 @@ const ORACLE_URL = 'http://localhost:3000';
 const proofsEnabled = false;
 
 async function localDeploy(
-  zkAppInstance: BioAuthLibrary,
+  zkAppInstance: BioAuth,
   zkAppPrivatekey: PrivateKey,
   deployerAccount: PrivateKey
 ) {
   const txn = await Mina.transaction(deployerAccount, () => {
     AccountUpdate.fundNewAccount(deployerAccount);
-    zkAppInstance.deploy({ zkappKey: zkAppPrivatekey });
-    zkAppInstance.init(zkAppPrivatekey);
+    zkAppInstance.deploy();
   });
   await txn.prove();
   txn.sign([zkAppPrivatekey]);
   await txn.send();
 }
 
-describe('BioAuthLibrary', () => {
+describe('BioAuth', () => {
   jest.setTimeout(1000 * 100);
 
   let deployerAccount: PrivateKey,
@@ -49,7 +48,7 @@ describe('BioAuthLibrary', () => {
 
   beforeAll(async () => {
     await isReady;
-    if (proofsEnabled) BioAuthLibrary.compile();
+    if (proofsEnabled) BioAuth.compile();
   });
 
   beforeEach(async () => {
@@ -77,8 +76,8 @@ describe('BioAuthLibrary', () => {
     setTimeout(shutdown, 0);
   });
 
-  it('generates and deploys the `BioAuthLibrary` smart contract', async () => {
-    const zkAppInstance = new BioAuthLibrary(zkAppAddress);
+  it('generates and deploys the `BioAuth` smart contract', async () => {
+    const zkAppInstance = new BioAuth(zkAppAddress);
     await localDeploy(zkAppInstance, zkAppPrivateKey, deployerAccount);
     const oraclePublicKey = zkAppInstance.oraclePublicKey.get();
     expect(oraclePublicKey).toEqual(PublicKey.fromBase58(ORACLE_PUBLIC_KEY));
@@ -86,7 +85,7 @@ describe('BioAuthLibrary', () => {
 
   describe('actual API requests', () => {
     it('emits an event if the account bioauthorization is valid', async () => {
-      const zkAppInstance = new BioAuthLibrary(zkAppAddress);
+      const zkAppInstance = new BioAuth(zkAppAddress);
       await localDeploy(zkAppInstance, zkAppPrivateKey, deployerAccount);
 
       // sign the public key to create the payload to bioauthenticate
@@ -103,40 +102,16 @@ describe('BioAuthLibrary', () => {
       Local.setTimestamp(UInt64.from(Date.now()));
 
       const txn = await Mina.transaction(deployerAccount, () => {
-        zkAppInstance.verifyAccount(userPublicKey, userSig, message);
+        zkAppInstance.bioAuthorizeAccount(message, userPublicKey);
       });
       await txn.prove();
       await txn.send();
 
       const events = await zkAppInstance.fetchEvents();
 
-      expect('bioAuthorizedAccount').toEqual(events[0].type);
+      expect('bioAuthedAccount').toEqual(events[0].type);
       const eventValue = events[0].event;
       expect(eventValue).toEqual(userPublicKey);
-    });
-
-    it('throws an error if the timestamp on the oracle response has expired even if the signatures are valid', async () => {
-      const zkAppInstance = new BioAuthLibrary(zkAppAddress);
-      await localDeploy(zkAppInstance, zkAppPrivateKey, deployerAccount);
-
-      // sign the public key to create the payload to bioauthenticate
-      const userPublicKey = userAccount.toPublicKey();
-      const userSig = Signature.create(userAccount, userPublicKey.toFields());
-      const hash = Poseidon.hash(userSig.toFields());
-      const id = payloadToBase58(hash);
-
-      const response = await fetch(`${ORACLE_URL}/${id}`);
-      const data = await response.json();
-      const message = BioAuthorizedMessage.fromJSON(data);
-
-      // !! set the local blockchain time to be into the future
-      Local.setTimestamp(UInt64.from(Date.now() + BIOAUTH_TTL + 1000));
-
-      expect(async () => {
-        await Mina.transaction(deployerAccount, () => {
-          zkAppInstance.verifyAccount(userPublicKey, userSig, message);
-        });
-      }).rejects;
     });
   });
 
@@ -156,17 +131,17 @@ describe('BioAuthLibrary', () => {
       publicKey: 'B62qpxcmAq7DFDFk1wGrishcNTEVgwZaVbtsTFEc8CiARFt31oauHsu',
     };
 
-    const userSigHardcoded = {
-      r: '10744180574211337418213540647277974882972320698735506825745737987658991327393',
-      s: '18597266674018403770243070821948188759787123939357049409611567205466187887166',
-    };
+    // const userSigHardcoded = {
+    //   r: '10744180574211337418213540647277974882972320698735506825745737987658991327393',
+    //   s: '18597266674018403770243070821948188759787123939357049409611567205466187887166',
+    // };
 
     it('emits an event if the account bioauthorization is valid', async () => {
-      const zkAppInstance = new BioAuthLibrary(zkAppAddress);
+      const zkAppInstance = new BioAuth(zkAppAddress);
       await localDeploy(zkAppInstance, zkAppPrivateKey, deployerAccount);
 
       const userPublicKey = userAccountHardcoded.toPublicKey();
-      const userSignature = Signature.fromJSON(userSigHardcoded);
+      // const userSignature = Signature.fromJSON(userSigHardcoded);
 
       const message = BioAuthorizedMessage.fromJSON(data);
 
@@ -174,59 +149,16 @@ describe('BioAuthLibrary', () => {
       Local.setTimestamp(UInt64.from(data.data.timestamp));
 
       const txn = await Mina.transaction(deployerAccount, () => {
-        zkAppInstance.verifyAccount(userPublicKey, userSignature, message);
+        zkAppInstance.bioAuthorizeAccount(message, userPublicKey);
       });
       await txn.prove();
       await txn.send();
 
       const events = await zkAppInstance.fetchEvents();
 
-      expect('bioAuthorizedAccount').toEqual(events[0].type);
+      expect('bioAuthedAccount').toEqual(events[0].type);
       const eventValue = events[0].event;
       expect(eventValue).toEqual(userPublicKey);
-    });
-
-    it('throws an error if the timestamp on the oracle response has expired', async () => {
-      const zkAppInstance = new BioAuthLibrary(zkAppAddress);
-      await localDeploy(zkAppInstance, zkAppPrivateKey, deployerAccount);
-
-      const message = BioAuthorizedMessage.fromJSON(data);
-
-      // !! set the local blockchain time to be in the future
-      Local.setTimestamp(UInt64.from(Date.now() + BIOAUTH_TTL + 1000));
-
-      expect(async () => {
-        await Mina.transaction(deployerAccount, () => {
-          zkAppInstance.verifyMessage(message);
-        });
-      }).rejects;
-    });
-
-    it('throws an error if the oracle signature is invalid', async () => {
-      const zkAppInstance = new BioAuthLibrary(zkAppAddress);
-      await localDeploy(zkAppInstance, zkAppPrivateKey, deployerAccount);
-
-      const data = {
-        data: {
-          payload: '1',
-          timestamp: '1670467803093',
-          bioAuthId:
-            '1391777418574392779706621352966998843662998262631589378793598464749407397987',
-        },
-        signature: {
-          r: '3944738628665209662363613258118115619702760042099078922610298516769343672850', // << wrong
-          s: '21126437327761612007332534776266668885298517943731782631680322180607779695605',
-        },
-        publicKey: 'B62qpxcmAq7DFDFk1wGrishcNTEVgwZaVbtsTFEc8CiARFt31oauHsu',
-      };
-
-      const message = BioAuthorizedMessage.fromJSON(data);
-
-      expect(async () => {
-        await Mina.transaction(deployerAccount, () => {
-          zkAppInstance.verifyMessage(message);
-        });
-      }).rejects;
     });
   });
 });

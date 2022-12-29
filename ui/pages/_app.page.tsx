@@ -15,7 +15,6 @@ export default function App() {
     hasWallet: null as null | boolean,
     hasBeenSetup: false,
     accountExists: false,
-    currentNum: null as null | Field,
     errorMsg: null as null | string,
     // statusMsg: null as null | string,
     publicKey: null as null | PublicKey,
@@ -25,9 +24,9 @@ export default function App() {
     bioAuthLink: null as null | string,
     currentNumBioAuthed: null as null | Field,
     hasBioAuth: false,
-    // loading functions
     hasSnarky: false,
-    hasZkApp: false,
+    hasZkApp: false, // compiled and account fetched from network
+    txnHash: null as null | string,
   });
 
   // -------------------------------------------------------
@@ -79,19 +78,27 @@ export default function App() {
         setState((s) => ({ ...s, hasZkApp: true }));
 
         const zkappPublicKey = PublicKey.fromBase58(
-          "B62qoc3ADEaKWKoHxpzzREiiadqZCf5XG3H9fi3r2SibJFSTb1tmu21"
+          "B62qjGm9FqsQA4AKqGVr8MLPacqqGCFqfjjLa68X87m1en8T9vRWFdr"
         );
 
         await zkappWorkerClient.initZkappInstance(zkappPublicKey);
 
         console.log("getting zkApp state...");
-        await zkappWorkerClient.fetchAccount({ publicKey: zkappPublicKey });
-        const currentNum = await zkappWorkerClient.getNum();
-        const currentNumBioAuthed = await zkappWorkerClient.getNumBioAuthed();
-        console.log(
-          "current state:",
-          JSON.stringify({ currentNum, currentNumBioAuthed })
-        );
+        let errorMsg: null | string = null;
+        let currentNumBioAuthed: null | Field = null;
+        const acct = await zkappWorkerClient.fetchAccount({
+          publicKey: zkappPublicKey,
+        });
+        if (acct.account === undefined) {
+          errorMsg = acct.error.statusText;
+          setState((s) => ({ ...s, hasZkApp: false }));
+        } else {
+          currentNumBioAuthed = await zkappWorkerClient.getNumBioAuthed();
+          console.log(
+            "current state:",
+            JSON.stringify({ currentNumBioAuthed })
+          );
+        }
 
         setState((s) => ({
           ...s,
@@ -103,9 +110,8 @@ export default function App() {
           publicKey,
           zkappPublicKey,
           accountExists,
-          currentNum,
           currentNumBioAuthed,
-          errorMsg: null,
+          errorMsg,
         }));
       }
     })();
@@ -141,40 +147,13 @@ export default function App() {
   // -------------------------------------------------------
   // Send a transaction
 
-  const onSendTransaction = async () => {
-    setState({ ...state, creatingTransaction: true });
-    console.log("sending a transaction...");
-
-    await state.zkappWorkerClient!.fetchAccount({
-      publicKey: state.publicKey!,
-    });
-
-    await state.zkappWorkerClient!.createUpdateTransaction();
-
-    console.log("creating proof...");
-    await state.zkappWorkerClient!.proveUpdateTransaction();
-
-    console.log("getting Transaction JSON...");
-    const transactionJSON = await state.zkappWorkerClient!.getTransactionJSON();
-
-    console.log("requesting send transaction...");
-    const { hash } = await (window as any).mina.sendTransaction({
-      transaction: transactionJSON,
-      feePayer: {
-        fee: transactionFee,
-        memo: "",
-      },
-    });
-
-    console.log(
-      "See transaction at https://berkeley.minaexplorer.com/transaction/" + hash
-    );
-
-    setState({ ...state, creatingTransaction: false });
-  };
-
   const onSendTransactionBioAuthed = async () => {
-    setState({ ...state, creatingTransaction: true, errorMsg: null });
+    setState((s) => ({
+      ...s,
+      creatingTransaction: true,
+      errorMsg: null,
+      txnHash: null,
+    }));
     console.log("sending a transaction...");
 
     await state.zkappWorkerClient!.fetchAccount({
@@ -202,11 +181,15 @@ export default function App() {
       });
       return;
     }
+    setState((s) => ({ ...s, hasBioAuth: true }));
 
     console.log("bioauth oracle response", bioAuth);
 
     const errorMsg =
-      await state.zkappWorkerClient!.createUpdateBioAuthedTransaction(bioAuth);
+      await state.zkappWorkerClient!.createUpdateBioAuthedTransaction(
+        bioAuth,
+        state.publicKey!
+      );
     if (errorMsg) {
       setState({ ...state, errorMsg });
       return;
@@ -231,7 +214,12 @@ export default function App() {
       "See transaction at https://berkeley.minaexplorer.com/transaction/" + hash
     );
 
-    setState({ ...state, creatingTransaction: false });
+    setState({
+      ...state,
+      creatingTransaction: false,
+      hasBioAuth: false,
+      txnHash: hash,
+    });
   };
 
   // -------------------------------------------------------
@@ -242,16 +230,12 @@ export default function App() {
     await state.zkappWorkerClient!.fetchAccount({
       publicKey: state.zkappPublicKey!,
     });
-    const currentNum = await state.zkappWorkerClient!.getNum();
     const currentNumBioAuthed =
       await state.zkappWorkerClient!.getNumBioAuthed();
 
-    console.log(
-      "current state:",
-      JSON.stringify({ currentNum, currentNumBioAuthed })
-    );
+    console.log("current state:", JSON.stringify({ currentNumBioAuthed }));
 
-    setState({ ...state, currentNum, currentNumBioAuthed });
+    setState({ ...state, currentNumBioAuthed });
   };
 
   // -------------------------------------------------------
@@ -296,7 +280,12 @@ export default function App() {
   }
 
   let txnNeedsBioAuth;
-  if (state.hasBeenSetup && !state.hasBioAuth && state.bioAuthLink) {
+  if (
+    state.hasBeenSetup &&
+    !state.hasBioAuth &&
+    state.bioAuthLink &&
+    !state.txnHash
+  ) {
     txnNeedsBioAuth = (
       <div className="w-2/4">
         <Alert mode="info">
@@ -317,20 +306,27 @@ export default function App() {
     );
   }
 
+  let txnSuccess;
+  if (state.hasBeenSetup && state.txnHash) {
+    const txnLink = `https://berkeley.minaexplorer.com/transaction/${state.txnHash}`;
+    txnSuccess = (
+      <div className="w-2/4">
+        <Alert mode="success">
+          <div>
+            See transaction at{" "}
+            <a className="link" href={txnLink} target="_blank" rel="noreferrer">
+              {txnLink}
+            </a>
+          </div>
+        </Alert>
+      </div>
+    );
+  }
+
   let mainContent;
-  if (state.hasBeenSetup && state.accountExists) {
+  if (state.hasBeenSetup && state.accountExists && state.hasZkApp) {
     mainContent = (
       <div className="flex flex-col items-center space-y-8 mt-8">
-        {/*
-        <button
-          className="btn btn-primary normal-case"
-          onClick={onSendTransaction}
-          disabled={state.creatingTransaction}
-        >
-          Send Transaction
-        </button>
-        <div> Current Number in zkApp: {state.currentNum!.toString()} </div>
-        */}
         <button
           className="btn btn-primary normal-case"
           onClick={onSendTransactionBioAuthed}
@@ -380,11 +376,6 @@ export default function App() {
                 <li className={`step ${state.hasZkApp && "step-primary"}`}>
                   &emsp;zkApp&emsp;
                 </li>
-                {/*
-                <li className={`step ${state.hasBioAuth && "step-primary"}`}>
-                  &emsp;BioAuth&emsp;
-                </li>
-                */}
               </ul>
             </div>
           </div>
@@ -403,6 +394,7 @@ export default function App() {
           {setup}
           {accountDoesNotExist}
           {txnNeedsBioAuth}
+          {txnSuccess}
         </div>
         {mainContent}
       </div>

@@ -6,7 +6,7 @@ type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
 // ---------------------------------------------------------------------------------------
 
-import type { Add } from "../../contracts/src/Add";
+import type { BioAuth } from "../../contracts/src/BioAuth";
 
 // Use a locally running oracle-test server
 // const BIOAUTH_ORACLE_URL = "http://localhost:3000/mina";
@@ -15,8 +15,8 @@ import type { Add } from "../../contracts/src/Add";
 const BIOAUTH_ORACLE_URL = "https://auth.zkhumans.io/mina";
 
 const state = {
-  Add: null as null | typeof Add,
-  zkapp: null as null | Add,
+  BioAuth: null as null | typeof BioAuth,
+  zkapp: null as null | BioAuth,
   transaction: null as null | Transaction,
   bioAuthOracle: null as null | BioAuthOracle,
 };
@@ -35,11 +35,11 @@ const functions = {
     Mina.setActiveInstance(Berkeley);
   },
   loadContract: async (args: {}) => {
-    const { Add } = await import("../../contracts/build/src/Add.js");
-    state.Add = Add;
+    const { BioAuth } = await import("../../contracts/build/src/BioAuth.js");
+    state.BioAuth = BioAuth;
   },
   compileContract: async (args: {}) => {
-    await state.Add!.compile();
+    await state.BioAuth!.compile();
   },
   fetchAccount: async (args: { publicKey58: string }) => {
     const publicKey = PublicKey.fromBase58(args.publicKey58);
@@ -47,11 +47,7 @@ const functions = {
   },
   initZkappInstance: async (args: { publicKey58: string }) => {
     const publicKey = PublicKey.fromBase58(args.publicKey58);
-    state.zkapp = new state.Add!(publicKey);
-  },
-  getNum: async (args: {}) => {
-    const currentNum = await state.zkapp!.num.get();
-    return JSON.stringify(currentNum.toJSON());
+    state.zkapp = new state.BioAuth!(publicKey);
   },
   getNumBioAuthed: async (args: {}) => {
     const currentNumBioAuthed = await state.zkapp!.numBioAuthed.get();
@@ -63,19 +59,17 @@ const functions = {
   getBioAuthLink: async (args: { bioAuthId: string }) => {
     return state.bioAuthOracle!.getBioAuthLink(args.bioAuthId);
   },
-  createUpdateTransaction: async (args: {}) => {
-    const transaction = await Mina.transaction(() => {
-      state.zkapp!.update();
-    });
-    state.transaction = transaction;
-  },
-  createUpdateBioAuthedTransaction: async (args: { data: string }) => {
-    const data = JSON.parse(args.data);
+  createUpdateBioAuthedTransaction: async (args: {
+    bioAuth: string;
+    publicKey58: string;
+  }) => {
+    const publicKey = PublicKey.fromBase58(args.publicKey58);
+    const data = JSON.parse(args.bioAuth);
     const oracleMsg = BioAuthorizedMessage.fromJSON(data);
 
     try {
       const transaction = await Mina.transaction(() => {
-        state.zkapp!.updateBioAuthed(oracleMsg);
+        state.zkapp!.bioAuthorizeAccount(oracleMsg, publicKey);
       });
       state.transaction = transaction;
     } catch (e) {
