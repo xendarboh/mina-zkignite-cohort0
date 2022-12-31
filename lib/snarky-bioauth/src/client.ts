@@ -4,6 +4,16 @@ import { payloadToBase58 } from './util.js';
 
 export { BioAuthOracle };
 
+export type { BioAuthOracleMeta };
+
+/**
+ * The returned object from {@link BioAuthOracle.fetchMeta}.
+ */
+interface BioAuthOracleMeta {
+  /** The BioAuth Oracle's Mina publicKey (in base58 format). */
+  publicKey: string;
+}
+
 /**
  * BioAuthOracle; a client utility for interacting with a BioAuth Oracle server
  * to abstract+establish its API.
@@ -36,6 +46,18 @@ class BioAuthOracle {
 
     const data = await response.json();
     return [id, JSON.stringify(data)];
+  }
+
+  /**
+   * Fetch meta information from the BioAuth Oracle.
+   *
+   * @returns The BioAuthoracle's meta info or null upon error.
+   */
+  public async fetchMeta(): Promise<null | BioAuthOracleMeta> {
+    const response = await fetch(`${this.url}/meta`);
+    if (response.status !== 200) return null;
+    const data = (await response.json()) as BioAuthOracleMeta;
+    return data;
   }
 
   /**
