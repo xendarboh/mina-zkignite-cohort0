@@ -13,6 +13,12 @@ import {
 
 const PORT = process.env.PORT || 3000;
 
+// The private key of our account. When running locally the hardcoded key will
+// be used. In production the key will be loaded from environment variable.
+const privateKeyBase58 =
+  process.env.PRIVATE_KEY ??
+  "EKFALuhuMgHMoxVb3mwKS3Zx5yL9kg5TawbBoQaDq6bWqNE2GGBP";
+
 const app = new Koa();
 const router = new Router();
 
@@ -56,13 +62,7 @@ async function getSignedBioAuthId(id) {
 
   const _payload = payloadFromBase58(id);
 
-  // The private key of our account. When running locally the hardcoded key will
-  // be used. In production the key will be loaded from a Vercel environment
-  // variable.
-  const privateKey = PrivateKey.fromBase58(
-    process.env.PRIVATE_KEY ??
-      "EKFALuhuMgHMoxVb3mwKS3Zx5yL9kg5TawbBoQaDq6bWqNE2GGBP"
-  );
+  const privateKey = PrivateKey.fromBase58(privateKeyBase58);
 
   // Compute the public key associated with our private key
   const publicKey = privateKey.toPublicKey();
@@ -99,11 +99,25 @@ router.get("/:id", async (ctx) => {
   console.log(`/${id} --> ${ctx.body.data.bioAuthId}`);
 });
 
+////////////////////////////////////////////////////////////////////////
+// for simulating interactive requests
+// more closely resembles deployed non-test oracle
+////////////////////////////////////////////////////////////////////////
+
 // an in-memory store of bioauthenticated payloads
 const signedBioAuths = {};
 
-// for simulating interactive requests
-// more closely resembles deployed non-test oracle
+router.get("/mina/meta", async (ctx) => {
+  await isReady;
+  const privateKey = PrivateKey.fromBase58(privateKeyBase58);
+  const publicKey = privateKey.toPublicKey();
+  const meta = {
+    publicKey,
+  };
+  ctx.body = meta;
+  console.log("[200] /mina/meta");
+});
+
 router.get("/mina/:id", async (ctx) => {
   const id = ctx.params.id;
   if (signedBioAuths[id]) {
