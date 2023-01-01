@@ -7,10 +7,10 @@ import { Field, PublicKey } from 'snarkyjs';
 // exported that could be useful, so use PublicKey.x as intermediary
 
 /**
- * Convert bioauth'd payload (Field) to Base58 string.
+ * Convert bio-auth payload (Field) to Base58 string.
  *
- * @param {Field} payload
- * @return {*} string
+ * @param {} payload
+ * @returns {} string
  */
 export function payloadToBase58(payload: Field): string {
   const publicKey = PublicKey.fromBase58(
@@ -21,10 +21,10 @@ export function payloadToBase58(payload: Field): string {
 }
 
 /**
- * Convert Base58 string to bioauth'd payload (Field).
+ * Convert Base58 string to bio-auth payload (Field).
  *
- * @param {string} id
- * @return {*} Field
+ * @param {} id
+ * @returns {} Field
  */
 export function payloadFromBase58(id: string): Field {
   const publicKey = PublicKey.fromBase58(id);

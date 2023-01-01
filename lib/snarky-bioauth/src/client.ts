@@ -22,22 +22,24 @@ interface BioAuthOracleMeta {
 class BioAuthOracle {
   protected url: string;
 
+  /**
+   * @param {} url The bio-auth oracle's URL
+   */
   constructor(url: string) {
     this.url = url;
   }
 
   /**
-   * From the given payload, returns a signed BioAuth and its id from the
-   * oracle server.
+   * From the given payload, returns a signed bio-authorized message and its id
+   * from the oracle server.
    *
-   * The id is always returned so an auth link may be requested.
+   * The BioAuth id is always returned so an auth link may be requested for it
+   * using {@link getBioAuthLink}.
    *
-   * The signed data is null if it does not exist.
-   *
-   * @return {*}  {[string, null | string]}
-   * @memberof BioAuthOracle
+   * @param {} payload The data to have bio-authorized.
+   * @returns {} A BioAuthorizedMessage (as JSON) or null if the payload has
+   * not yet been bio-authorized.
    */
-  // public async fetchBioAuth(payload: Field): Promise<null | string> {
   public async fetchBioAuth(payload: Field): Promise<[string, null | string]> {
     const id = payloadToBase58(payload);
     const response = await fetch(`${this.url}/${id}`);
@@ -51,7 +53,7 @@ class BioAuthOracle {
   /**
    * Fetch meta information from the BioAuth Oracle.
    *
-   * @returns The BioAuthoracle's meta info or null upon error.
+   * @returns {} The BioAuthoracle's meta info or null upon error.
    */
   public async fetchMeta(): Promise<null | BioAuthOracleMeta> {
     const response = await fetch(`${this.url}/meta`);
@@ -61,11 +63,12 @@ class BioAuthOracle {
   }
 
   /**
-   * Get a URL (for a user to follow) for bioauth for the given payload (base58
-   * string).
+   * Given a BioAuth id, as returned by {@link fetchBioAuth}, returns a URL for
+   * a human to follow to conduct the bio-authorization of the data associated
+   * with the id.
    *
-   * @return {*}  {string}
-   * @memberof BioAuthOracle
+   * @param {} id a BioAuth id
+   * @returns {} URL Link a human can follow to bio-authenticate
    */
   public getBioAuthLink(id: string): string {
     return `${this.url}/auth/${id}`;

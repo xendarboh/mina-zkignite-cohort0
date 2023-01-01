@@ -11,7 +11,8 @@ import {
 export { BioAuthorizedMessage, ProvableBioAuth };
 
 /**
- * A bio-authorized message signed and timestamped by an oracle.
+ * A message bio-authorized by a human then signed and timestamped by the
+ * BioAuth Oracle.
  *
  * @class BioAuthorizedMessage
  */
@@ -23,9 +24,6 @@ class BioAuthorizedMessage extends Struct({
 }) {
   /**
    * Return a BioAuthorizedMessage created from JSON data.
-   *
-   * @param {{ payload: string; timestamp: string; bioAuthId: string; signature: any }} [data={}]
-   * @return {*} {BioAuthorizedMessage}
    */
   static fromJSON(data: any) {
     return new BioAuthorizedMessage({
@@ -44,11 +42,11 @@ class BioAuthorizedMessage extends Struct({
  */
 class ProvableBioAuth {
   /**
-   * Verify a bio-authorized payload (signed oracle response) in circuit.
+   * Verify a bio-authorized message (signed oracle response) in circuit.
    *
-   * @param {PublicKey} oraclePublicKey
-   * @param {BioAuthorizedMessage} oracleMsg
-   * @return {*}  {Bool}
+   * @param {} oraclePublicKey The BioAuth Oracle's public key
+   * @param {} oracleMsg The message signed by the BioAuth Oracle
+   * @returns {} True iff the bio-authorized message is valid
    */
   static checkMessage(
     oraclePublicKey: PublicKey,
@@ -70,11 +68,11 @@ class ProvableBioAuth {
   /**
    * Verify a bio-authorized account (Mina PublicKey) in circuit.
    *
-   * @param {PublicKey} oraclePublicKey
-   * @param {BioAuthorizedMessage} oracleMsg
-   * @param {PublicKey} userKey
-   * @param {Signature} userSig
-   * @return {*}  {Bool}
+   * @param {} oraclePublicKey The BioAuth Oracle's public key
+   * @param {} oracleMsg The message signed by the BioAuth Oracle
+   * @param {} userKey The human's public key
+   * @param {} userSig The human's signature (signed public key)
+   * @returns {} True iff the public key is bio-authorized by the human
    */
   static checkAccount(
     oraclePublicKey: PublicKey,
@@ -100,10 +98,10 @@ class ProvableBioAuth {
    *
    * NOTE: 2022-12-12 timestamp operations appear problematic
    *
-   * @param {BioAuthorizedMessage} oracleMsg
-   * @param {UInt64} currentTime
-   * @param {UInt64} expireTime
-   * @return {*}  {Bool}
+   * @param {} oracleMsg The message signed by the BioAuth Oracle
+   * @param {} currentTime The current network time
+   * @param {} expireTime The expiration time of the bio-authorization
+   * @returns {} True iff the TTL is valid (current and not expired)
    */
   static checkTTL(
     oracleMsg: BioAuthorizedMessage,
